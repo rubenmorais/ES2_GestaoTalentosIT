@@ -1,0 +1,13 @@
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Frontend.exe
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\appsettings.Development.json
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\appsettings.json
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Frontend.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Frontend.deps.json
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Frontend.runtimeconfig.json
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Frontend.pdb
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Blazored.LocalStorage.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Microsoft.IdentityModel.Logging.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\Microsoft.IdentityModel.Tokens.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\Frontend\bin\Release\net9.0\publish\System.IdentityModel.Tokens.Jwt.dll

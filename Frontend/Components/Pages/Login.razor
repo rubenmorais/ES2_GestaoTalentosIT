@@ -1,0 +1,86 @@
+@page "/"
+@rendermode InteractiveServer
+@layout NoMenuLayout
+@using Blazored.LocalStorage
+@using Frontend.DtoClasses
+@using Frontend.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject ILocalStorageService LocalStorage
+@using Frontend.Components.Layout
+
+<link rel="stylesheet" href="login.css" />
+
+<div class="container" style="max-width: 400px; margin-top: 100px;">
+    <h3 class="text-center mb-4">Acesso ao Sistema</h3>
+
+    <EditForm Model="loginDto" OnValidSubmit="HandleLogin" class="login-form">
+        <DataAnnotationsValidator />
+        
+
+        <div class="form-group">
+            <label for="email">E-mail:</label>
+            <InputText id="email" class="form-control" @bind-Value="loginDto.Email" placeholder="Introduza o seu e-mail" />
+            <ValidationMessage For="@(() => loginDto.Email)" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Palavra-Passe:</label>
+            <InputText id="password" type="password" class="form-control" @bind-Value="loginDto.PalavraPasse" placeholder="Introduza a sua palavra-passe" />
+            <ValidationMessage For="@(() => loginDto.PalavraPasse)" />
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary w-100">Entrar</button>
+        </div>
+
+        @if (loginFailed)
+        {
+            <div class="alert alert-danger mt-3" role="alert">
+                <strong>Falha no login!</strong> Verifique as suas credenciais e tente novamente.
+            </div>
+        }
+        <div class="form-group mt-3 text-center">
+            <p>Não tem uma conta?<button class="btn btn-link" @onclick="NavigateToRegisterPage">Registe-se</button></p>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private LoginDTO loginDto = new LoginDTO();
+    private bool loginFailed = false;
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            loginFailed = false;
+
+            if (string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.PalavraPasse))
+            {
+                loginFailed = true;
+                return;
+            }
+
+            var token = await AuthService.LoginAsync(loginDto);
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                await LocalStorage.SetItemAsync("authToken", token);
+                Navigation.NavigateTo("/home");
+            }
+            else
+            {
+                loginFailed = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            loginFailed = true;
+        }
+    }
+    private void NavigateToRegisterPage()
+    {
+        Navigation.NavigateTo("/register");
+    }
+}

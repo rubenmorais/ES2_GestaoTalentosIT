@@ -1,0 +1,104 @@
+@page "/register"
+@rendermode InteractiveServer
+@layout NoMenuLayout
+@using Frontend.Components.Layout
+@using Frontend.DtoClasses
+@using Frontend.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+<link rel="stylesheet" href="register.css" />
+<div class="container" style="max-width: 400px; margin-top: 100px;">
+    <h3 class="text-center mb-4">Registo no Sistema</h3>
+
+    <EditForm Model="createUtilizadorDto" OnValidSubmit="HandleRegister" class="login-form">
+        <DataAnnotationsValidator />
+        
+        <div class="form-group">
+            <label for="nome">Nome:</label>
+            <InputText id="nome" class="form-control" @bind-Value="createUtilizadorDto.Nome" placeholder="Introduza o seu nome" />
+            <ValidationMessage For="@(() => createUtilizadorDto.Nome)" />
+        </div>
+
+        <div class="form-group">
+            <label for="email">E-mail:</label>
+            <InputText id="email" class="form-control" @bind-Value="createUtilizadorDto.Email" placeholder="Introduza o seu e-mail" />
+            <ValidationMessage For="@(() => createUtilizadorDto.Email)" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Palavra-Passe:</label>
+            <InputText id="password" type="password" class="form-control" @bind-Value="createUtilizadorDto.PalavraPasse" placeholder="Introduza a sua palavra-passe" />
+            <ValidationMessage For="@(() => createUtilizadorDto.PalavraPasse)" />
+        </div>
+        
+        <div class="form-group">
+            <label for="confirmPassword">Confirmar Palavra-Passe:</label>
+            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="confirmPassword" placeholder="Confirme a sua palavra-passe" />
+            <ValidationMessage For="@(() => confirmPassword)" />
+            @if (!string.IsNullOrEmpty(confirmPassword) && confirmPassword != createUtilizadorDto.PalavraPasse)
+            {
+                <div class="text-danger">As palavras-passe não coincidem.</div>
+            }
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary w-100" disabled="@(createUtilizadorDto.PalavraPasse != confirmPassword)">Registar</button>
+        </div>
+
+        @if (registrationFailed)
+        {
+            <div class="alert alert-danger mt-3" role="alert">
+                <strong>Falha no registo!</strong> Verifique os dados e tente novamente.
+            </div>
+        }
+        else if (registrationSuccess)
+        {
+            <div class="alert alert-success mt-3" role="alert">
+                <strong>Registo realizado com sucesso!</strong> Pode agora fazer login.
+            </div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    private CreateUtilizadorDTO createUtilizadorDto = new CreateUtilizadorDTO();
+    private string confirmPassword; 
+    private bool registrationFailed = false;
+    private bool registrationSuccess = false;
+    private string registrationErrorMessage = string.Empty;
+
+    private async Task HandleRegister()
+    {
+        try
+        {
+            registrationFailed = false;
+            registrationSuccess = false;
+            registrationErrorMessage = string.Empty;
+            
+            if (createUtilizadorDto.PalavraPasse != confirmPassword)
+            {
+                registrationFailed = true;
+                registrationErrorMessage = "As palavras-passe não coincidem.";
+                return;
+            }
+
+            var success = await AuthService.RegisterAsync(createUtilizadorDto);
+
+            if (success)
+            {
+                registrationSuccess = true;
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                registrationFailed = true;
+                registrationErrorMessage = "Falha no registo! Verifique os dados e tente novamente.";
+            }
+        }
+        catch (Exception)
+        {
+            registrationFailed = true;
+            registrationErrorMessage = "Ocorreu um erro inesperado. Tente novamente mais tarde.";
+        }
+    }
+}

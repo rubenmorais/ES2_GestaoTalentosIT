@@ -1,0 +1,15 @@
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\bin\Debug\net9.0\DbLayer.deps.json
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\bin\Debug\net9.0\DbLayer.runtimeconfig.json
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\bin\Debug\net9.0\DbLayer.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\bin\Debug\net9.0\DbLayer.pdb
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.csproj.AssemblyReference.cache
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.AssemblyInfoInputs.cache
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.AssemblyInfo.cs
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.csproj.CoreCompileInputs.cache
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.sourcelink.json
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\refint\DbLayer.dll
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.pdb
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\DbLayer.genruntimeconfig.cache
+C:\Users\ruben\OneDrive\Ambiente de Trabalho\IPVC\ES2\GestaoTalentosIT\DbLayer\obj\Debug\net9.0\ref\DbLayer.dll
