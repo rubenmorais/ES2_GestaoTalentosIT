@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\DbLayer\\DbLayer.csproj": {}
+    "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\DbLayer\\DbLayer.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\DbLayer\\DbLayer.csproj": {
+    "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\DbLayer\\DbLayer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\DbLayer\\DbLayer.csproj",
+        "projectUniqueName": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\DbLayer\\DbLayer.csproj",
         "projectName": "DbLayer",
-        "projectPath": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\DbLayer\\DbLayer.csproj",
-        "packagesPath": "C:\\Users\\ruben\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\DbLayer\\obj\\",
+        "projectPath": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\DbLayer\\DbLayer.csproj",
+        "packagesPath": "C:\\Users\\Ruben\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\DbLayer\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\ruben\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Ruben\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"

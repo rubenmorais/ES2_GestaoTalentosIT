@@ -8251,19 +8251,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ruben\\.nuget\\packages\\": {}
+    "C:\\Users\\Ruben\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\WebAPI\\WebAPI.csproj",
+      "projectUniqueName": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\WebAPI\\WebAPI.csproj",
       "projectName": "WebAPI",
-      "projectPath": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\WebAPI\\WebAPI.csproj",
-      "packagesPath": "C:\\Users\\ruben\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\WebAPI\\obj\\",
+      "projectPath": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\WebAPI\\WebAPI.csproj",
+      "packagesPath": "C:\\Users\\Ruben\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\WebAPI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\ruben\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Ruben\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -8275,8 +8275,8 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\DbLayer\\DbLayer.csproj": {
-              "projectPath": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\DbLayer\\DbLayer.csproj"
+            "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\DbLayer\\DbLayer.csproj": {
+              "projectPath": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\DbLayer\\DbLayer.csproj"
             }
           }
         }

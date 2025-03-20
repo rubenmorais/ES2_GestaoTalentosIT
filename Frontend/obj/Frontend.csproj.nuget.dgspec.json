@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\Frontend\\Frontend.csproj": {}
+    "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\Frontend\\Frontend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\Frontend\\Frontend.csproj": {
+    "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\Frontend\\Frontend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\Frontend\\Frontend.csproj",
+        "projectUniqueName": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\Frontend\\Frontend.csproj",
         "projectName": "Frontend",
-        "projectPath": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\Frontend\\Frontend.csproj",
-        "packagesPath": "C:\\Users\\ruben\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ruben\\OneDrive\\Ambiente de Trabalho\\IPVC\\ES2\\GestaoTalentosIT\\Frontend\\obj\\",
+        "projectPath": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\Frontend\\Frontend.csproj",
+        "packagesPath": "C:\\Users\\Ruben\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Ruben\\Desktop\\IPVC\\Es2\\Frontend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\ruben\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Ruben\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -47,6 +47,10 @@
             "Blazored.LocalStorage": {
               "target": "Package",
               "version": "[4.5.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.3, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
