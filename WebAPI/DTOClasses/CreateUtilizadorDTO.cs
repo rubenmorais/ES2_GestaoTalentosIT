@@ -1,9 +1,19 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WebAPI.DTOClasses;
 
 public class CreateUtilizadorDTO
 {
-    public string Nome { get; set; } = null!;
-    public string Email { get; set; } = null!;
-    public string PalavraPasse { get; set; } = null!;
-    public int Tipoid { get; set; }  
+    [Required(ErrorMessage = "O nome é obrigatório.")]
+    public string Nome { get; set; }
+
+    [Required(ErrorMessage = "O email é obrigatório.")]
+    [EmailAddress(ErrorMessage = "O email não é válido.")]
+    public string Email { get; set; }
+
+    [Required(ErrorMessage = "A palavra-passe é obrigatória.")]
+    public string PalavraPasse { get; set; }
+
+    [Required(ErrorMessage = "O tipo de utilizador é obrigatório.")]
+    public int Tipoid { get; set; }
 }
