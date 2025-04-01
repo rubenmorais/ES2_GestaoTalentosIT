@@ -12,5 +12,6 @@ namespace Frontend.DtoClasses
         [Required(ErrorMessage = "A palavra-passe é obrigatória.")]
         [MinLength(6, ErrorMessage = "A palavra-passe deve ter pelo menos 6 caracteres.")]
         public string PalavraPasse { get; set; }
+        public int Tipoid { get; set; }
     }
 }

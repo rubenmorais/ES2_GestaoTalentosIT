@@ -48,13 +48,13 @@ namespace WebAPI.Services
                     throw new Exception("Já existe um utilizador com esse e-mail.");
                 }
                 
+                int tipoId = createUtilizadorDTO.Tipoid == 0 ? 2 : createUtilizadorDTO.Tipoid;
+                
                 var tipoExistente = _context.Tipos.FirstOrDefault(t => t.Tipoid == createUtilizadorDTO.Tipoid);
                 if (tipoExistente == null)
                 {
                     throw new Exception("Tipo de utilizador inválido.");
                 }
-
-                int tipoId = createUtilizadorDTO.Tipoid == 0 ? 2 : createUtilizadorDTO.Tipoid;
 
                 var hashedPassword = HashPassword(createUtilizadorDTO.PalavraPasse);
 

@@ -48,7 +48,7 @@
         @if (registrationFailed)
         {
             <div class="alert alert-danger mt-3" role="alert">
-                <strong>Falha no registo!</strong> Verifique os dados e tente novamente.
+                <strong>Erro:</strong> @registrationErrorMessage
             </div>
         }
         else if (registrationSuccess)
@@ -82,9 +82,11 @@
                 return;
             }
 
-            var success = await AuthService.RegisterAsync(createUtilizadorDto);
+            createUtilizadorDto.Tipoid = 2;
+            
+            var errorMessage = await AuthService.RegisterAsync(createUtilizadorDto);
 
-            if (success)
+            if (string.IsNullOrEmpty(errorMessage))
             {
                 registrationSuccess = true;
                 Navigation.NavigateTo("/");
@@ -92,7 +94,15 @@
             else
             {
                 registrationFailed = true;
-                registrationErrorMessage = "Falha no registo! Verifique os dados e tente novamente.";
+                
+                if (errorMessage.Contains("Já existe um utilizador com esse e-mail"))
+                {
+                    registrationErrorMessage = "Já existe um utilizador com esse e-mail. Tente outro.";
+                }
+                else
+                {
+                    registrationErrorMessage = "Falha no registo! Verifique os dados e tente novamente.";
+                }
             }
         }
         catch (Exception)

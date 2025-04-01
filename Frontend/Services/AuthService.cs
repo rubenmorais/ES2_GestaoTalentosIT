@@ -43,27 +43,32 @@ namespace Frontend.Services
             await ((CustomAuthStateProvider)_authStateProvider).MarkUserAsLoggedOut();
         }
 
-        public async Task<bool> RegisterAsync(CreateUtilizadorDTO createUtilizadorDTO)
+        public async Task<string?> RegisterAsync(CreateUtilizadorDTO createUtilizadorDTO)
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("https://localhost:7070/api/Utilizador/create", createUtilizadorDTO);
-                
+                var response = await _httpClient.PostAsJsonAsync("https://localhost:7070/api/Utilizador/create",
+                    createUtilizadorDTO);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    return true;
+                    return null;
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    return "Já existe um utilizador com esse e-mail.";
                 }
                 else
                 {
                     var errorMessage = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"Erro no registo: {errorMessage}");
-                    return false;
+                    return "Erro ao registrar utilizador.";
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao tentar registar: {ex.Message}");
-                return false;
+                return "Erro inesperado. Tente novamente mais tarde.";
             }
         }
     }
