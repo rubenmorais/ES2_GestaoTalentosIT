@@ -61,5 +61,18 @@ namespace WebAPI.Controllers
                 return NotFound($"Erro ao deletar utilizador: {ex.Message}"); 
             }
         }
+        [HttpGet("isadmin/{id}")]
+        public ActionResult<bool> IsAdmin(int id)
+        {
+            try
+            {
+                bool isAdmin = _utilizadorService.IsAdmin(id);
+                return Ok(isAdmin); 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Erro ao verificar se o utilizador é admin: {ex.Message}");
+            }
+        }
     }
 }

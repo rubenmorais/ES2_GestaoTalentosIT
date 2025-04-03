@@ -93,6 +93,28 @@ namespace WebAPI.Services
                 throw new Exception("Ocorreu um erro ao excluir o utilizador.", ex);
             }
         }
+        public bool IsAdmin(int utilizadorId)
+        {
+            try
+            {
+                var utilizador = _context.Utilizadores
+                    .Include(u => u.Tipo) 
+                    .FirstOrDefault(u => u.Utilizadorid == utilizadorId);
+
+                if (utilizador == null)
+                {
+                    throw new Exception($"Utilizador com ID {utilizadorId} não encontrado.");
+                }
+                
+                return utilizador.Tipoid == 1; 
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ocorreu um erro ao verificar se o utilizador é admin.", ex);
+            }
+        }
+
+
 
         public UtilizadorDTO? GetUserByEmail(string email)
         {

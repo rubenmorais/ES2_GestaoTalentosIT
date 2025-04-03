@@ -1,0 +1,288 @@
+@page "/talentos"
+@using Frontend.DTOClasses
+@rendermode InteractiveServer
+@using Frontend.Services
+@inject TalentoService TalentoService
+@inject UtilizadorService UtilizadorService  
+
+<PageTitle>Talentos</PageTitle>
+
+<h1>Lista de Talentos</h1>
+
+<input type="text" @oninput="AtualizarPesquisa" placeholder="Pesquisar talentos" class="form-control mb-2" />
+
+@if (talentos == null)
+{
+    <p>Carregando talentos...</p>
+}
+else if (filteredTalentos.Count == 0)
+{
+    <p>Nenhum talento encontrado.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>País</th>
+            <th>Preço por Hora</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var talento in TalentosNaPagina)
+        {
+            @if (talento.Visibilidade || isAdmin || talento.UtilizadorId == UtilizadorIdLogado) 
+            {
+                <tr>
+                    <td>@talento.Nome</td>
+                    <td>@talento.Email</td>
+                    <td>@talento.Pais</td>
+                    <td>@talento.PrecoPorHora €</td>
+                    <td>
+                        @if (isAdmin) 
+                        {
+                            <button class="btn btn-danger" @onclick="() => ApagarTalento(talento.Talentoid)">Apagar</button>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+    
+    <div class="pagination d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-secondary" style="margin-left: 10px;" @onclick="PaginaAnterior" disabled="@(!PodeIrParaPaginaAnterior)">Anterior</button>
+            <span>Página @paginaAtual de @totalPaginas</span>
+            <button class="btn btn-secondary" style="margin-right: 10px;" @onclick="PaginaProxima" disabled="@(!PodeIrParaPaginaProxima)">Próxima</button>
+        </div>
+    </div>
+}
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <button class="btn btn-success" @onclick="AbrirModal">Adicionar Talento</button>
+</div>
+
+@if (mostrarModal)
+{
+    <div class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Talento</h5>
+                </div>
+                <div class="modal-body">
+                    @if (registrationFailed)
+                    {
+                        <div class="alert alert-danger mt-3" role="alert">
+                            <strong>Erro:</strong> @registrationErrorMessage
+                        </div>
+                    }
+                    <EditForm Model="novoTalento" OnValidSubmit="AdicionarTalento" OnInvalidSubmit="ExibirErroValidacao">
+                        <DataAnnotationsValidator />
+                        <div class="form-group">
+                            <label for="Nome">Nome:</label>
+                            <InputText id="Nome" class="form-control" @bind-Value="novoTalento.Nome" />
+                            <ValidationMessage For="@(() => novoTalento.Nome)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Email">Email:</label>
+                            <InputText id="Email" class="form-control" @bind-Value="novoTalento.Email" />
+                            <ValidationMessage For="@(() => novoTalento.Email)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Pais">País:</label>
+                            <InputText id="Pais" class="form-control" @bind-Value="novoTalento.Pais" />
+                            <ValidationMessage For="@(() => novoTalento.Pais)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="PrecoPorHora">Preço por Hora (€):</label>
+                            <InputNumber id="PrecoPorHora" class="form-control" @bind-Value="novoTalento.PrecoPorHora" />
+                            <ValidationMessage For="@(() => novoTalento.PrecoPorHora)" />
+                        </div>
+
+                        <div class="form-group form-check" style="margin-left: -10px; padding: 10px">
+                            <InputCheckbox id="Visibilidade" @bind-Value="novoTalento.Visibilidade" />
+                            <label for="Visibilidade">Visível</label>
+                        </div>
+                    </EditForm>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success" @onclick="AdicionarTalento">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<TalentoDTO>? talentos;
+    private string searchTerm = "";
+    private bool mostrarModal = false;
+    private CreateTalentoDTO novoTalento = new();
+    private int? UtilizadorIdLogado;
+    private string? erroMensagem;
+    private bool registrationFailed = false;
+    private string registrationErrorMessage = "";
+    private bool isAdmin = false;
+    private int paginaAtual = 1;
+    private int itensPorPagina = 10;
+    private int totalPaginas => (int)Math.Ceiling((double)(filteredTalentos.Count) / itensPorPagina);
+
+    private List<TalentoDTO> filteredTalentos =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? talentos ?? new List<TalentoDTO>()
+            : talentos?.Where(t => 
+                t.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.Pais.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList() ?? new List<TalentoDTO>();
+
+    private List<TalentoDTO> TalentosNaPagina
+    {
+        get
+        {
+            return filteredTalentos
+                .Skip((paginaAtual - 1) * itensPorPagina)
+                .Take(itensPorPagina)
+                .ToList();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UtilizadorIdLogado = await UtilizadorService.GetUserIdAsync();
+            isAdmin = await UtilizadorService.IsAdminAsync(); 
+            await CarregarTalentos();
+        }
+    }
+
+    private async Task CarregarTalentos()
+    {
+        talentos = await TalentoService.GetAllTalentosAsync();
+        StateHasChanged();
+    }
+
+    private void AtualizarPesquisa(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+    
+    private async Task ApagarTalento(int id)
+    {
+        var sucesso = await TalentoService.DeleteTalentoAsync(id);
+        if (sucesso)
+        {
+            Console.WriteLine("Talento apagado com sucesso!");
+            talentos?.RemoveAll(t => t.Talentoid == id);
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Erro ao apagar talento.");
+        }
+    }
+
+    private void AbrirModal()
+    {
+        novoTalento = new CreateTalentoDTO();
+        mostrarModal = true;
+        registrationFailed = false; 
+        registrationErrorMessage = ""; 
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+    }
+    private void ExibirErroValidacao()
+    {
+        registrationErrorMessage = "Existem erros no formulário. Por favor, corrija e tente novamente.";
+        registrationFailed = true;
+        StateHasChanged();
+    }
+
+    private async Task AdicionarTalento()
+    {
+        if (UtilizadorIdLogado.HasValue)
+        {
+            if (novoTalento.PrecoPorHora <= 0)
+            {
+                registrationErrorMessage = "O preço por hora deve ser positivo.";
+                registrationFailed = true;
+                StateHasChanged();
+                return;
+            }
+            
+            novoTalento.UtilizadorId = UtilizadorIdLogado.Value;
+            try
+            {
+                var resultado = await TalentoService.CreateTalentoAsync(novoTalento);
+                if (resultado == null)
+                {
+                    mostrarModal = false;
+                    await CarregarTalentos();
+                }
+                else
+                {
+                    if (resultado.Contains("O e-mail fornecido já está associado a outro talento"))
+                    {
+                        registrationErrorMessage = "Já existe um utilizador com esse e-mail. Tente outro.";
+                        registrationFailed = true;
+                    }
+                    else
+                    {
+                        registrationErrorMessage = "Erro desconhecido. Tente novamente.";
+                        registrationFailed = true;
+                    }
+                    StateHasChanged();  
+                }
+            }
+            catch (Exception ex)
+            {
+                registrationErrorMessage = $"Erro ao adicionar talento: {ex.Message}";
+                registrationFailed = true;
+                StateHasChanged();  
+            }
+        }
+        else
+        {
+            registrationErrorMessage = "Utilizador não está logado.";
+            registrationFailed = true;
+            StateHasChanged(); 
+        }
+    }
+
+    private bool PodeIrParaPaginaAnterior => paginaAtual > 1;
+    private bool PodeIrParaPaginaProxima => paginaAtual < totalPaginas;
+
+    private void PaginaAnterior()
+    {
+        if (paginaAtual > 1)
+        {
+            paginaAtual--;
+            StateHasChanged();
+        }
+    }
+
+    private void PaginaProxima()
+    {
+        if (paginaAtual < totalPaginas)
+        {
+            paginaAtual++;
+            StateHasChanged();
+        }
+    }
+}

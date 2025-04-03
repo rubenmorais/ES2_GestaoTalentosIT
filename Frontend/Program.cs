@@ -12,12 +12,16 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<TalentoService>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient<AuthService>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7070/");
 });
+
 
 
 builder.Services.AddBlazoredLocalStorage();
