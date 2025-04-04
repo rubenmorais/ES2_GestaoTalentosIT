@@ -45,6 +45,24 @@ namespace WebAPI.Controllers
             }
         }
         
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] UpdateTalentoDTO dto)
+        {
+            try
+            {
+                var updatedTalento = _talentoService.UpdateTalento(id, dto);
+                return Ok(updatedTalento);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+        
         [HttpGet("{id}")]
         public ActionResult GetTalentoPorId(int id)
         {

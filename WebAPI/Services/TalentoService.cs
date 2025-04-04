@@ -41,6 +41,54 @@ namespace WebAPI.Services
 
             return talento;
         }
+        
+        public TalentoDTO UpdateTalento(int id, UpdateTalentoDTO dto)
+        {
+            var talento = _context.Talentos.FirstOrDefault(t => t.Talentoid == id);
+            if (talento == null)
+            {
+                throw new Exception($"Talento com ID {id} não encontrado.");
+            }
+
+            if (dto.UtilizadorId != talento.Utilizadorid)
+            {
+                var utilizadorExiste = _context.Utilizadores.Any(u => u.Utilizadorid == dto.UtilizadorId);
+                if (!utilizadorExiste)
+                {
+                    throw new ArgumentException("O UtilizadorId fornecido não existe.");
+                }
+                talento.Utilizadorid = dto.UtilizadorId;
+            }
+
+            if (dto.Email != talento.Email)
+            {
+                var emailExiste = _context.Talentos.Any(t => t.Email == dto.Email && t.Talentoid != id);
+                if (emailExiste)
+                {
+                    throw new ArgumentException("O e-mail fornecido já está associado a outro talento.");
+                }
+                talento.Email = dto.Email;
+            }
+
+            talento.Nome = dto.Nome;
+            talento.Pais = dto.Pais;
+            talento.PrecoHora = dto.PrecoPorHora;
+            talento.Visibilidade = dto.Visibilidade;
+
+            _context.SaveChanges();
+
+            return new TalentoDTO
+            {
+                Talentoid = talento.Talentoid,
+                UtilizadorId = talento.Utilizadorid,
+                Nome = talento.Nome,
+                Pais = talento.Pais,
+                Email = talento.Email,
+                PrecoPorHora = talento.PrecoHora ?? 0,
+                Visibilidade = talento.Visibilidade ?? false
+            };
+        }
+
 
         public List<TalentoDTO> GetAllTalentos()
         {
