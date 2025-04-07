@@ -34,6 +34,22 @@ namespace Frontend.Services
             var errorMessage = await response.Content.ReadAsStringAsync();
             return $"Erro ao criar talento: {errorMessage}";
         }
+        
+        public async Task<TalentoDTO> UpdateTalentoAsync(UpdateTalentoDTO talento)
+        {
+            var url = $"https://localhost:7070/api/talento/{talento.Talentoid}";
+            
+            var response = await _httpClient.PutAsJsonAsync(url, talento);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<TalentoDTO>();
+            }
+            
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            throw new Exception(errorMessage);
+        }
+
 
         public async Task<bool> DeleteTalentoAsync(int id)
         {

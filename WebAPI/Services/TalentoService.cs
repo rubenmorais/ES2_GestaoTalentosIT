@@ -50,16 +50,6 @@ namespace WebAPI.Services
                 throw new Exception($"Talento com ID {id} não encontrado.");
             }
 
-            if (dto.UtilizadorId != talento.Utilizadorid)
-            {
-                var utilizadorExiste = _context.Utilizadores.Any(u => u.Utilizadorid == dto.UtilizadorId);
-                if (!utilizadorExiste)
-                {
-                    throw new ArgumentException("O UtilizadorId fornecido não existe.");
-                }
-                talento.Utilizadorid = dto.UtilizadorId;
-            }
-
             if (dto.Email != talento.Email)
             {
                 var emailExiste = _context.Talentos.Any(t => t.Email == dto.Email && t.Talentoid != id);

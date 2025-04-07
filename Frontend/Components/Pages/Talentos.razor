@@ -42,8 +42,9 @@ else
                     <td>@talento.Pais</td>
                     <td>@talento.PrecoPorHora €</td>
                     <td>
-                        @if (isAdmin) 
+                        @if (isAdmin || talento.UtilizadorId == UtilizadorIdLogado)
                         {
+                            <button class="btn btn-warning" style="margin-right: 10px" @onclick="() => AbrirModalEdicao(talento)">Editar</button>
                             <button class="btn btn-danger" @onclick="() => ApagarTalento(talento.Talentoid)">Apagar</button>
                         }
                     </td>
@@ -72,7 +73,7 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Adicionar Talento</h5>
+                    <h5 class="modal-title">@((isEditing ? "Editar Talento" : "Adicionar Talento"))</h5>
                 </div>
                 <div class="modal-body">
                     @if (registrationFailed)
@@ -116,7 +117,7 @@ else
                 <div class="modal-footer">
                     <button class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
                     <div class="form-group">
-                        <button type="submit" class="btn btn-success" @onclick="AdicionarTalento">Guardar</button>
+                        <button type="submit" class="btn btn-success" @onclick="OnSubmit">@((isEditing ? "Atualizar" : "Guardar"))</button>
                     </div>
                 </div>
             </div>
@@ -137,6 +138,9 @@ else
     private int paginaAtual = 1;
     private int itensPorPagina = 10;
     private int totalPaginas => (int)Math.Ceiling((double)(filteredTalentos.Count) / itensPorPagina);
+    private bool isEditing = false;
+    private int talentoIdEmEdicao = 0;
+
 
     private List<TalentoDTO> filteredTalentos =>
         string.IsNullOrWhiteSpace(searchTerm)
@@ -206,6 +210,8 @@ else
     private void FecharModal()
     {
         mostrarModal = false;
+        isEditing = false;
+        talentoIdEmEdicao = 0;
     }
     private void ExibirErroValidacao()
     {
@@ -213,11 +219,33 @@ else
         registrationFailed = true;
         StateHasChanged();
     }
+    
+    private async Task OnSubmit()
+    {
+        if (isEditing)
+        {
+            await AtualizarTalento();
+        }
+        else
+        {
+            await AdicionarTalento();
+        }
+    }
+
 
     private async Task AdicionarTalento()
     {
         if (UtilizadorIdLogado.HasValue)
         {
+            if (string.IsNullOrWhiteSpace(novoTalento.Nome) ||
+                string.IsNullOrWhiteSpace(novoTalento.Email) ||
+                string.IsNullOrWhiteSpace(novoTalento.Pais))
+            {
+                registrationErrorMessage = "Todos os campos são obrigatórios.";
+                registrationFailed = true;
+                StateHasChanged();
+                return;
+            }
             if (novoTalento.PrecoPorHora <= 0)
             {
                 registrationErrorMessage = "O preço por hora deve ser positivo.";
@@ -285,4 +313,79 @@ else
             StateHasChanged();
         }
     }
+    private void AbrirModalEdicao(TalentoDTO talento)
+    {
+        isEditing = true;
+        talentoIdEmEdicao = talento.Talentoid;
+
+        novoTalento = new CreateTalentoDTO
+        {
+            Nome = talento.Nome,
+            Email = talento.Email,
+            Pais = talento.Pais,
+            PrecoPorHora = talento.PrecoPorHora,
+            Visibilidade = talento.Visibilidade,
+            UtilizadorId = talento.UtilizadorId
+        };
+
+        registrationFailed = false;
+        registrationErrorMessage = "";
+        mostrarModal = true;
+    }
+    
+    private async Task AtualizarTalento()
+    {
+        if (UtilizadorIdLogado.HasValue)
+        {
+            if (string.IsNullOrWhiteSpace(novoTalento.Nome) ||
+                string.IsNullOrWhiteSpace(novoTalento.Email) ||
+                string.IsNullOrWhiteSpace(novoTalento.Pais))
+            {
+                registrationErrorMessage = "Todos os campos são obrigatórios.";
+                registrationFailed = true;
+                StateHasChanged();
+                return;
+            }
+            
+            if (novoTalento.PrecoPorHora <= 0)
+            {
+                registrationErrorMessage = "O preço por hora deve ser positivo.";
+                registrationFailed = true;
+                return;
+            }
+
+            try
+            {
+                var talentoAtualizado = new UpdateTalentoDTO
+                {
+                    Talentoid = talentoIdEmEdicao,
+                    Nome = novoTalento.Nome,
+                    Email = novoTalento.Email,
+                    Pais = novoTalento.Pais,
+                    PrecoPorHora = novoTalento.PrecoPorHora,
+                    Visibilidade = novoTalento.Visibilidade,
+                };
+
+                var resultado = await TalentoService.UpdateTalentoAsync(talentoAtualizado);
+
+                if (resultado != null)
+                {
+                    mostrarModal = false;
+                    isEditing = false;
+                    await CarregarTalentos();
+                }
+                else
+                {
+                    registrationErrorMessage = "Erro ao atualizar talento.";
+                    registrationFailed = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                registrationErrorMessage = ex.Message;
+                registrationFailed = true;
+            }
+        }
+    }
+
 }

@@ -4,9 +4,6 @@ namespace WebAPI.DTOClasses
 {
     public class UpdateTalentoDTO
     {
-        [Required]
-        public int UtilizadorId { get; set; }
-
         [Required, MaxLength(100)]
         public string Nome { get; set; }
 
