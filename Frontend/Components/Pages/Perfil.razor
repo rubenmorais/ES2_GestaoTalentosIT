@@ -1,0 +1,135 @@
+@page "/perfil"
+@rendermode InteractiveServer
+@using Frontend.DTOClasses
+@using Frontend.Services
+@inject UtilizadorService UtilizadorService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Perfil</PageTitle>
+
+<h1>Perfil</h1>
+
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success" role="alert">
+        @mensagemSucesso
+    </div>
+}
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger" role="alert">
+        @mensagemErro
+    </div>
+}
+
+@if (updateUtilizador != null)
+{
+    <EditForm Model="@updateUtilizador" OnValidSubmit="GuardarAlteracoes">
+        <DataAnnotationsValidator />
+
+        <div class="form-group" style="margin-top: 10px">
+            <label for="nome">Nome:</label>
+            <InputText id="nome" class="form-control" @bind-Value="updateUtilizador.Nome" />
+            <ValidationMessage For="@(() => updateUtilizador.Nome)" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px">
+            <label for="email">Email:</label>
+            <InputText id="email" class="form-control" @bind-Value="updateUtilizador.Email" />
+            <ValidationMessage For="@(() => updateUtilizador.Email)" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px">
+            <label for="tipo">Tipo de Utilizador:</label>
+            <InputSelect id="tipo" class="form-control" @bind-Value="updateUtilizador.Tipoid">
+                <option value="1">Administrador</option>
+                <option value="2">Utilizador</option>
+                <option value="3">Gestor de Utilizadores</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => updateUtilizador.Tipoid)" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px">
+            <label for="password">Palavra-Passe:</label>
+            <InputText id="password" class="form-control" @bind-Value="updateUtilizador.PalavraPasse" type="password" />
+            <ValidationMessage For="@(() => updateUtilizador.PalavraPasse)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px">Guardar Alterações</button>
+    </EditForm>
+}
+else
+{
+    <p>A carregar informações do perfil...</p>
+}
+@code {
+    private UtilizadorDTO? utilizador;
+    private UpdateUtilizadorDTO? updateUtilizador;
+    private int? UtilizadorIdLogado;
+
+    private string? mensagemSucesso;
+    private string? mensagemErro;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                UtilizadorIdLogado = await UtilizadorService.GetUserIdAsync();
+
+                if (!UtilizadorIdLogado.HasValue)
+                {
+                    NavigationManager.NavigateTo("/");
+                    return;
+                }
+
+                utilizador = await UtilizadorService.GetUserByIdAsync(UtilizadorIdLogado.Value);
+
+                if (utilizador == null)
+                {
+                    NavigationManager.NavigateTo("/");
+                    return;
+                }
+
+                updateUtilizador = new UpdateUtilizadorDTO
+                {
+                    Nome = utilizador.Nome,
+                    Email = utilizador.Email,
+                    Tipoid = utilizador.Tipoid,
+                    PalavraPasse = "" 
+                };
+
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                mensagemErro = "Erro ao carregar o perfil.";
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+
+    private async Task GuardarAlteracoes()
+    {
+        mensagemSucesso = null;
+        mensagemErro = null;
+
+        if (updateUtilizador == null || utilizador == null)
+            return;
+
+        var resultado = await UtilizadorService.UpdateUtilizadorAsync(
+            utilizador.Utilizadorid,
+            updateUtilizador
+        );
+
+        if (resultado)
+        {
+            mensagemSucesso = "Perfil atualizado com sucesso!";
+        }
+        else
+        {
+            mensagemErro = "Ocorreu um erro ao guardar as alterações.";
+        }
+    }
+}

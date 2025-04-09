@@ -19,8 +19,26 @@ namespace Frontend.Services
 
         public async Task<TalentoDTO?> GetTalentoByIdAsync(int id)
         {
-            return await _httpClient.GetFromJsonAsync<TalentoDTO>($"https://localhost:7070/api/talento/{id}");
+            try
+            {
+                var response = await _httpClient.GetAsync($"https://localhost:7070/api/talento/{id}");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return null; 
+                }
+
+                response.EnsureSuccessStatusCode(); 
+
+                return await response.Content.ReadFromJsonAsync<TalentoDTO>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar talento com ID {id}: {ex.Message}");
+                return null;
+            }
         }
+
 
         public async Task<string?> CreateTalentoAsync(CreateTalentoDTO createTalentoDTO)
         {

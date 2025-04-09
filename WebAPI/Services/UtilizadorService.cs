@@ -75,6 +75,48 @@ namespace WebAPI.Services
             }
         }
         
+        public void UpdateUtilizador(int utilizadorId, UpdateUtilizadorDTO updateUtilizadorDTO)
+        {
+            try
+            {
+                var utilizador = _context.Utilizadores.FirstOrDefault(u => u.Utilizadorid == utilizadorId);
+        
+                if (utilizador == null)
+                {
+                    throw new Exception("Utilizador não encontrado.");
+                }
+                
+                var existingEmailUser = _context.Utilizadores
+                    .FirstOrDefault(u => u.Email == updateUtilizadorDTO.Email && u.Utilizadorid != utilizadorId);
+
+                if (existingEmailUser != null)
+                {
+                    throw new Exception("Este e-mail já está a ser utilizado por outro utilizador.");
+                }
+                
+                var tipoExistente = _context.Tipos.FirstOrDefault(t => t.Tipoid == updateUtilizadorDTO.Tipoid);
+                if (tipoExistente == null)
+                {
+                    throw new Exception("Tipo de utilizador inválido.");
+                }
+                
+                utilizador.Nome = updateUtilizadorDTO.Nome;
+                utilizador.Email = updateUtilizadorDTO.Email;
+                utilizador.Tipoid = updateUtilizadorDTO.Tipoid;
+                
+                if (!string.IsNullOrEmpty(updateUtilizadorDTO.PalavraPasse))
+                {
+                    utilizador.PalavraPasse = HashPassword(updateUtilizadorDTO.PalavraPasse);
+                }
+                
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar o utilizador: {ex.Message}", ex);
+            }
+        }
+
         public void DeleteUtilizador(int id)
         {
             try
@@ -114,24 +156,41 @@ namespace WebAPI.Services
             }
         }
 
-
-
-        public UtilizadorDTO? GetUserByEmail(string email)
+        public UtilizadorDTO GetUserById(int id)
         {
-            var utilizador = _context.Utilizadores
-                .Include(u => u.Tipo)
-                .FirstOrDefault(u => u.Email == email);
-
-            return utilizador == null ? null : new UtilizadorDTO
+            try
             {
-                Utilizadorid = utilizador.Utilizadorid,
-                Nome = utilizador.Nome,
-                Email = utilizador.Email,
-                Tipoid = utilizador.Tipoid,
-                Tipo = utilizador.Tipo?.Tipo1
-            };
-        }
+                var utilizador = _context.Utilizadores
+                    .Include(u => u.Tipo) 
+                    .FirstOrDefault(u => u.Utilizadorid == id); 
 
+                if (utilizador == null)
+                {
+                    throw new Exception("Utilizador não encontrado.");
+                }
+
+                return new UtilizadorDTO
+                {
+                    Utilizadorid = utilizador.Utilizadorid,
+                    Nome = utilizador.Nome,
+                    Email = utilizador.Email,
+                    Tipoid = utilizador.Tipoid,
+                    Tipo = utilizador.Tipo.Tipo1
+                };
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("Utilizador não encontrado"))
+                {
+                    throw new Exception("Utilizador não encontrado.");
+                }
+                else
+                {
+                    throw new Exception("Ocorreu um erro ao recuperar o utilizador.", ex);
+                }
+            }
+        }
+        
         private string HashPassword(string password)
         {
             using (SHA512 sha512 = SHA512.Create())

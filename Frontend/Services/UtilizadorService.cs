@@ -1,5 +1,4 @@
-
-
+using Frontend.DTOClasses;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Frontend.Services
@@ -44,6 +43,46 @@ namespace Frontend.Services
             var isAdmin = await _httpClient.GetFromJsonAsync<bool>($"https://localhost:7070/api/utilizador/isadmin/{userId}");
 
             return isAdmin;
+        }
+        public async Task<bool> UpdateUtilizadorAsync(int id, UpdateUtilizadorDTO updateUtilizadorDTO)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"https://localhost:7070/api/utilizador/{id}", updateUtilizadorDTO);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return true; 
+                }
+                else
+                {
+                    return false; 
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao atualizar utilizador: {ex.Message}");
+                return false; 
+            }
+        }
+        public async Task<UtilizadorDTO> GetUserByIdAsync(int id)
+        {
+            try
+            {
+                var utilizador = await _httpClient.GetFromJsonAsync<UtilizadorDTO>($"https://localhost:7070/api/utilizador/{id}");
+                return utilizador;
+            }
+            catch (HttpRequestException ex)
+            {
+                if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine("Utilizador não encontrado.");
+                    return null; 
+                }
+
+                Console.WriteLine($"Erro ao recuperar o utilizador: {ex.Message}");
+                return null;
+            }
         }
     }
 }

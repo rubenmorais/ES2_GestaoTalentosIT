@@ -13,7 +13,7 @@
 
 @if (talentos == null)
 {
-    <p>Carregando talentos...</p>
+    <p>A carregar talentos...</p>
 }
 else if (filteredTalentos.Count == 0)
 {
@@ -42,7 +42,9 @@ else
                     <td>@talento.Pais</td>
                     <td>@talento.PrecoPorHora €</td>
                     <td>
-                        @if (isAdmin || talento.UtilizadorId == UtilizadorIdLogado)
+                        <button class="btn btn-primary" style="margin-right: 10px;" @onclick="() => IrParaDetalhes(talento.Talentoid)">Detalhes</button>
+                        
+                        @if ((isAdmin) || talento.UtilizadorId == UtilizadorIdLogado)
                         {
                             <button class="btn btn-warning" style="margin-right: 10px" @onclick="() => AbrirModalEdicao(talento)">Editar</button>
                             <button class="btn btn-danger" @onclick="() => ApagarTalento(talento.Talentoid)">Apagar</button>
@@ -84,25 +86,25 @@ else
                     }
                     <EditForm Model="novoTalento" OnValidSubmit="AdicionarTalento" OnInvalidSubmit="ExibirErroValidacao">
                         <DataAnnotationsValidator />
-                        <div class="form-group">
+                        <div class="form-group" style="margin-top: 10px">
                             <label for="Nome">Nome:</label>
                             <InputText id="Nome" class="form-control" @bind-Value="novoTalento.Nome" />
                             <ValidationMessage For="@(() => novoTalento.Nome)" />
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group" style="margin-top: 10px">
                             <label for="Email">Email:</label>
                             <InputText id="Email" class="form-control" @bind-Value="novoTalento.Email" />
                             <ValidationMessage For="@(() => novoTalento.Email)" />
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group" style="margin-top: 10px">
                             <label for="Pais">País:</label>
                             <InputText id="Pais" class="form-control" @bind-Value="novoTalento.Pais" />
                             <ValidationMessage For="@(() => novoTalento.Pais)" />
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group" style="margin-top: 10px">
                             <label for="PrecoPorHora">Preço por Hora (€):</label>
                             <InputNumber id="PrecoPorHora" class="form-control" @bind-Value="novoTalento.PrecoPorHora" />
                             <ValidationMessage For="@(() => novoTalento.PrecoPorHora)" />
@@ -140,8 +142,8 @@ else
     private int totalPaginas => (int)Math.Ceiling((double)(filteredTalentos.Count) / itensPorPagina);
     private bool isEditing = false;
     private int talentoIdEmEdicao = 0;
-
-
+    [Inject] private NavigationManager Navigation { get; set; }
+    
     private List<TalentoDTO> filteredTalentos =>
         string.IsNullOrWhiteSpace(searchTerm)
             ? talentos ?? new List<TalentoDTO>()
@@ -232,7 +234,6 @@ else
         }
     }
 
-
     private async Task AdicionarTalento()
     {
         if (UtilizadorIdLogado.HasValue)
@@ -292,6 +293,11 @@ else
             StateHasChanged(); 
         }
     }
+    
+    private void IrParaDetalhes(int talentoId)
+    {
+        Navigation.NavigateTo($"/talento/{talentoId}");
+    }
 
     private bool PodeIrParaPaginaAnterior => paginaAtual > 1;
     private bool PodeIrParaPaginaProxima => paginaAtual < totalPaginas;
@@ -313,6 +319,7 @@ else
             StateHasChanged();
         }
     }
+    
     private void AbrirModalEdicao(TalentoDTO talento)
     {
         isEditing = true;
@@ -387,5 +394,4 @@ else
             }
         }
     }
-
 }

@@ -48,6 +48,49 @@ namespace WebAPI.Controllers
             }
         }
         
+        [HttpPut("{id}")]
+        public ActionResult UpdateUtilizador(int id, [FromBody] UpdateUtilizadorDTO updateUtilizadorDTO)
+        {
+            try
+            {
+                _utilizadorService.UpdateUtilizador(id, updateUtilizadorDTO);
+                return NoContent(); 
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("Este e-mail já está a ser utilizado"))
+                {
+                    return Conflict(ex.Message); 
+                }
+
+                if (ex.Message.Contains("Utilizador não encontrado"))
+                {
+                    return NotFound(ex.Message); 
+                }
+                
+                return BadRequest($"Erro ao atualizar o utilizador: {ex.Message}");
+            }
+        }
+        [HttpGet("{id}")]
+        public ActionResult<UtilizadorDTO> GetUserById(int id)
+        {
+            try
+            {
+                var utilizadorDTO = _utilizadorService.GetUserById(id);
+                return Ok(utilizadorDTO);
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message == "Utilizador não encontrado.")
+                {
+                    return NotFound(ex.Message);  
+                }
+                return BadRequest($"Erro ao recuperar o utilizador: {ex.Message}"); 
+            }
+        }
+
+
+        
         [HttpDelete("{id}")]
         public ActionResult DeleteUtilizador(int id)
         {

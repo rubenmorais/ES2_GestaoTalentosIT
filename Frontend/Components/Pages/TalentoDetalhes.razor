@@ -9,7 +9,7 @@
 
 @if (talento == null)
 {
-    <p>A carregar detalhes...</p>
+    <p class="text-danger">O talento com o ID @TalentoId não foi encontrado.</p>
 }
 else
 {
@@ -37,6 +37,60 @@ else
             }
         </ul>
     }
+
+    <button class="btn btn-success mt-3" @onclick="() => mostrarFormulario = true">Criar Experiência</button>
+
+    @if (mostrarFormulario)
+    {
+        <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Nova Experiência</h5>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="novaExperiencia" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+                            @if (!string.IsNullOrEmpty(validacaoMensagem))
+                            {
+                                <div class="alert alert-danger">
+                                    @validacaoMensagem
+                                </div>
+                            }
+                            <div class="mb-3">
+                                <label class="form-label">Título</label>
+                                <InputText class="form-control" @bind-Value="novaExperiencia.Titulo" />
+                                <ValidationMessage For="@(() => novaExperiencia.Titulo)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Empresa</label>
+                                <InputText class="form-control" @bind-Value="novaExperiencia.Empresa" />
+                                <ValidationMessage For="@(() => novaExperiencia.Empresa)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ano Início</label>
+                                <InputNumber class="form-control" @bind-Value="novaExperiencia.AnoInicio" />
+                                <ValidationMessage For="@(() => novaExperiencia.AnoInicio)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ano Fim (opcional)</label>
+                                <InputNumber class="form-control" @bind-Value="novaExperiencia.AnoFim" />
+                                <ValidationMessage For="@(() => novaExperiencia.AnoFim)" />
+                            </div>
+                            
+                        </EditForm>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => mostrarFormulario = false">Cancelar</button>
+                        <button type="button" class="btn btn-success" @onclick="HandleValidSubmit">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 }
 
 @code {
@@ -45,13 +99,14 @@ else
 
     private TalentoDTO? talento;
     private List<ExperienciaDTO> experiencias = new();
+    private string? validacaoMensagem;
 
     protected override async Task OnInitializedAsync()
     {
         talento = await TalentoService.GetTalentoByIdAsync(TalentoId);
         experiencias = await ExperienciaService.GetExperienciasByTalentoIdAsync(TalentoId);
     }
-    
+
     private string CalcularDuracao(ExperienciaDTO exp)
     {
         int fim = exp.AnoFim ?? DateTime.Now.Year;
@@ -69,6 +124,39 @@ else
         else
         {
             return $"{anos} anos";
+        }
+    }
+
+    private bool mostrarFormulario = false;
+    private CreateExperienciaDTO novaExperiencia = new();
+
+    private async Task HandleValidSubmit()
+    {
+        if (string.IsNullOrEmpty(novaExperiencia.Titulo) || string.IsNullOrEmpty(novaExperiencia.Empresa) || novaExperiencia.AnoInicio == 0)
+        {
+            validacaoMensagem = "Todos os campos obrigatórios devem ser preenchidos.";
+            return;
+        }
+        
+        if (novaExperiencia.AnoFim.HasValue && novaExperiencia.AnoFim <= novaExperiencia.AnoInicio)
+        {
+            validacaoMensagem = "A data de fim deve ser posterior à data de início.";
+            return;
+        }
+        
+        validacaoMensagem = null;
+
+        novaExperiencia.TalentoId = TalentoId;
+        var response = await ExperienciaService.CreateExperienciaAsync(novaExperiencia);
+        if (response.IsSuccessStatusCode)
+        {
+            experiencias = await ExperienciaService.GetExperienciasByTalentoIdAsync(TalentoId);
+            novaExperiencia = new();
+            mostrarFormulario = false;
+        }
+        else
+        {
+            Console.WriteLine("Erro ao criar experiência");
         }
     }
 }
