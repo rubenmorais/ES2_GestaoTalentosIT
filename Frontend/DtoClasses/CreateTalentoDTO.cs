@@ -4,6 +4,7 @@ namespace Frontend.DTOClasses
 {
     public class CreateTalentoDTO
     {
+        [Required]
         public int UtilizadorId { get; set; }
         [Required(ErrorMessage = "O nome é obrigatório."), MaxLength(100, ErrorMessage = "O nome não pode ter mais de 100 carateres.")]
         public string Nome { get; set; }

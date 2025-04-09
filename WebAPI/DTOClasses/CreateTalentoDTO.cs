@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebAPI.DTOClasses
-{
-    public class CreateTalentoDTO
-    {
+namespace WebAPI.DTOClasses {
+    public class CreateTalentoDTO {
         [Required]
         public int UtilizadorId { get; set; }
 

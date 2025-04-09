@@ -13,6 +13,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<TalentoService>();
+builder.Services.AddScoped<ExperienciaService>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddAuthorizationCore();
@@ -22,6 +23,15 @@ builder.Services.AddHttpClient<AuthService>(client =>
     client.BaseAddress = new Uri("https://localhost:7070/");
 });
 
+builder.Services.AddHttpClient<ExperienciaService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7070/");
+});
+
+builder.Services.AddHttpClient<TalentoService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7070/");
+});
 
 
 builder.Services.AddBlazoredLocalStorage();

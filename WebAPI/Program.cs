@@ -19,6 +19,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TalentoService>();
+builder.Services.AddScoped<ExperienciaService>();
 
 
 var app = builder.Build();

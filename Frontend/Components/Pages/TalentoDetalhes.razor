@@ -1,0 +1,74 @@
+@page "/talento/{TalentoId:int}"
+@using Frontend.DTOClasses
+@rendermode InteractiveServer
+@using Frontend.Services
+@inject TalentoService TalentoService
+@inject ExperienciaService ExperienciaService
+
+<h3>Detalhes do Talento</h3>
+
+@if (talento == null)
+{
+    <p>A carregar detalhes...</p>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <h5>@talento.Nome</h5>
+        <p><strong>Email:</strong> @talento.Email</p>
+        <p><strong>País:</strong> @talento.Pais</p>
+        <p><strong>Preço por Hora:</strong> @talento.PrecoPorHora €</p>
+    </div>
+
+    <h4>Experiências</h4>
+    @if (experiencias == null || experiencias.Count == 0)
+    {
+        <p>Sem experiências registadas.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var exp in experiencias)
+            {
+                <li class="list-group-item">
+                    <strong>@exp.Titulo</strong> na <em>@exp.Empresa</em>
+                    <small><em>@exp.AnoInicio - @(exp.AnoFim.HasValue ? exp.AnoFim.Value.ToString() : "Presente")<span> (@CalcularDuracao(exp))</span></em></small>
+                </li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    [Parameter]
+    public int TalentoId { get; set; }
+
+    private TalentoDTO? talento;
+    private List<ExperienciaDTO> experiencias = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        talento = await TalentoService.GetTalentoByIdAsync(TalentoId);
+        experiencias = await ExperienciaService.GetExperienciasByTalentoIdAsync(TalentoId);
+    }
+    
+    private string CalcularDuracao(ExperienciaDTO exp)
+    {
+        int fim = exp.AnoFim ?? DateTime.Now.Year;
+        int inicio = exp.AnoInicio;
+        int anos = fim - inicio;
+
+        if (anos <= 0)
+        {
+            return "<1 ano";
+        }
+        else if (anos == 1)
+        {
+            return "1 ano";
+        }
+        else
+        {
+            return $"{anos} anos";
+        }
+    }
+}
