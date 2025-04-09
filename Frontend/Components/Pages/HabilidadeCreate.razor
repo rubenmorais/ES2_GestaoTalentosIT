@@ -1,0 +1,53 @@
+﻿@page "/habilidades/create"
+
+@using Frontend.DtoClasses
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+<h3>Criar Nova Habilidade</h3>
+
+<div class="mb-3">
+    <label for="nome">Nome:</label>
+    <input id="nome" class="form-control" @bind="habilidade.Nome" />
+</div>
+<div class="mb-3">
+    <label for="categoria">Categoria ID:</label>
+    <input id="categoria" type="number" class="form-control" @bind="habilidade.Categoriaid" />
+</div>
+<div class="mb-3">
+    <label for="criador">Criador ID:</label>
+    <input id="criador" type="number" class="form-control" @bind="habilidade.Criadorid" />
+</div>
+
+<button class="btn btn-success" @onclick="Salvar">Salvar</button>
+<button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+
+@code {
+    private HabilidadeDto habilidade = new();
+
+    private async Task Salvar()
+    {
+        // Chama o endpoint POST: https://localhost:5001/api/habilidades
+        var response = await Http.PostAsJsonAsync("api/habilidades", habilidade);
+        if (response.IsSuccessStatusCode)
+        {
+            NavManager.NavigateTo("/habilidades");
+        }
+        else
+        {
+            var erro = await response.Content.ReadAsStringAsync();
+            await AlertAsync($"Erro ao criar a habilidade: {erro}");
+        }
+    }
+
+    private void Cancelar()
+    {
+        NavManager.NavigateTo("/habilidades");
+    }
+
+    private Task AlertAsync(string message)
+    {
+        Console.WriteLine(message);
+        return Task.CompletedTask;
+    }
+}

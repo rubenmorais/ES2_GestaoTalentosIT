@@ -1,0 +1,98 @@
+﻿@page "/habilidades"
+
+@using Frontend.DtoClasses
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+<h3>Lista de Habilidades</h3>
+
+@if (habilidades == null)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (!habilidades.Any())
+{
+    <p>Nenhuma habilidade encontrada.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Categoria ID</th>
+                <th>Criador ID</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var hab in habilidades)
+            {
+                <tr>
+                    <td>@hab.Nome</td>
+                    <td>@hab.Categoriaid</td>
+                    <td>@hab.Criadorid</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" @onclick="() => Editar(hab.Habilidadeid)">Editar</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Apagar(hab.Habilidadeid)">Apagar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<button class="btn btn-primary" @onclick="CriarNovaHabilidade">Criar Nova Habilidade</button>
+
+@code {
+    private List<HabilidadeDto>? habilidades;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarHabilidades();
+    }
+
+    private async Task CarregarHabilidades()
+    {
+        // Chama o endpoint GET: https://localhost:5001/api/habilidades
+        habilidades = await Http.GetFromJsonAsync<List<HabilidadeDto>>("api/habilidades");
+    }
+
+    private void CriarNovaHabilidade()
+    {
+        NavManager.NavigateTo("/habilidades/create");
+    }
+
+    private void Editar(int id)
+    {
+        NavManager.NavigateTo($"/habilidades/edit/{id}");
+    }
+
+    private async Task Apagar(int id)
+    {
+        if (await ConfirmAsync("Tem certeza que deseja apagar esta habilidade?"))
+        {
+            var response = await Http.DeleteAsync($"api/habilidades/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                await CarregarHabilidades();
+            }
+            else
+            {
+                var erro = await response.Content.ReadAsStringAsync();
+                await AlertAsync($"Erro ao apagar a habilidade: {erro}");
+            }
+        }
+    }
+
+    // Métodos simples para simular dialogs de confirmação e alerta.
+    // Em um projeto real, você pode usar IJSRuntime para chamar métodos JavaScript.
+    private Task<bool> ConfirmAsync(string message) =>
+        Task.FromResult(true); // Retorne true para simular confirmação
+
+    private Task AlertAsync(string message)
+    {
+        Console.WriteLine(message);
+        return Task.CompletedTask;
+    }
+}
