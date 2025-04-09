@@ -1,65 +1,22 @@
+using DbLayer.Context;
 using DbLayer.Models;
 using WebAPI.DTOClasses;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI.Services
 {
     public class ExperienciaService
     {
-        private static List<Experiencia> _experiencias = new List<Experiencia>();
-        private static int _nextId = 1;
+        private readonly ApplicationDbContext _context;
+
+        public ExperienciaService(ApplicationDbContext context)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
 
         public List<ExperienciasDTO> GetAllExperiencias()
         {
-            return _experiencias.Select(e => new ExperienciasDTO
-            {
-                ExperienciaId = e.Experienciaid,
-                TalentoId = e.Talentoid,
-                Titulo = e.Titulo,
-                Empresa = e.Empresa,
-                AnoInicio = e.AnoInicio,
-                AnoFim = e.AnoFim
-            }).ToList();
-        }
-
-        public Experiencia CriarExperiencia(CreateExperienciaDTO dto)
-        {
-            var experiencia = new Experiencia
-            {
-                Experienciaid = _nextId++,
-                Talentoid = dto.TalentoId,
-                Titulo = dto.Titulo,
-                Empresa = dto.Empresa,
-                AnoInicio = dto.AnoInicio,
-                AnoFim = dto.AnoFim
-            };
-
-            _experiencias.Add(experiencia);
-            return experiencia;
-        }
-
-        public Experiencia UpdateExperiencia(int id, UpdateExperienciaDTO dto)
-        {
-            var experiencia = _experiencias.FirstOrDefault(e => e.Experienciaid == id);
-
-            if (experiencia == null)
-                throw new Exception("Experiência não encontrada.");
-
-            experiencia.Titulo = dto.Titulo;
-            experiencia.Empresa = dto.Empresa;
-            experiencia.AnoInicio = dto.AnoInicio;
-            experiencia.AnoFim = dto.AnoFim;
-
-            return experiencia;
-        }
-
-        public Experiencia GetExperienciaPorId(int id)
-        {
-            return _experiencias.FirstOrDefault(e => e.Experienciaid == id);
-        }
-        
-        public async Task<List<ExperienciasDTO>> GetByTalentoIdAsync(int id) {
-            var resultado = _experiencias
-                .Where(e => e.Talentoid == id)
+            return _context.Experiencias
                 .Select(e => new ExperienciasDTO
                 {
                     ExperienciaId = e.Experienciaid,
@@ -70,19 +27,108 @@ namespace WebAPI.Services
                     AnoFim = e.AnoFim
                 })
                 .ToList();
+        }
 
-            return await Task.FromResult(resultado);
+        public Experiencia CriarExperiencia(CreateExperienciaDTO dto)
+        {
+            var talentoExiste = _context.Talentos.Any(t => t.Talentoid == dto.TalentoId);
+            if (!talentoExiste)
+                throw new Exception($"Talento com ID {dto.TalentoId} não existe.");
+            
+            if (dto.AnoFim.HasValue && dto.AnoFim < dto.AnoInicio)
+                throw new Exception("O ano de fim não pode ser anterior ao ano de início.");
+
+         
+            var sobreposicaoExiste = _context.Experiencias.Any(e =>
+                e.Talentoid == dto.TalentoId &&
+                (
+                    (!e.AnoFim.HasValue || e.AnoFim >= dto.AnoInicio) && 
+                    (dto.AnoFim == null || e.AnoInicio <= dto.AnoFim)     
+                )
+            );
+
+            if (sobreposicaoExiste)
+                throw new Exception("Já existe uma experiência neste intervalo de anos para este talento.");
+
+            var experiencia = new Experiencia
+            {
+                Talentoid = dto.TalentoId,
+                Titulo = dto.Titulo,
+                Empresa = dto.Empresa,
+                AnoInicio = dto.AnoInicio,
+                AnoFim = dto.AnoFim
+            };
+
+            _context.Experiencias.Add(experiencia);
+            _context.SaveChanges();
+
+            return experiencia;
+        }
+        
+        public Experiencia UpdateExperiencia(int id, UpdateExperienciaDTO dto)
+        {
+            var experiencia = _context.Experiencias.FirstOrDefault(e => e.Experienciaid == id);
+
+            if (experiencia == null)
+                throw new Exception("Experiência não encontrada.");
+            
+            if (dto.AnoFim.HasValue && dto.AnoFim < dto.AnoInicio)
+                throw new Exception("O ano de fim não pode ser anterior ao ano de início.");
+            
+            var sobreposicaoExiste = _context.Experiencias.Any(e =>
+                e.Talentoid == experiencia.Talentoid &&
+                e.Experienciaid != id && 
+                (
+                    (!e.AnoFim.HasValue || e.AnoFim >= dto.AnoInicio) &&
+                    (dto.AnoFim == null || e.AnoInicio <= dto.AnoFim)
+                )
+            );
+
+            if (sobreposicaoExiste)
+                throw new Exception("Já existe outra experiência neste intervalo de anos para este talento.");
+            
+            experiencia.Titulo = dto.Titulo;
+            experiencia.Empresa = dto.Empresa;
+            experiencia.AnoInicio = dto.AnoInicio;
+            experiencia.AnoFim = dto.AnoFim;
+
+            _context.SaveChanges();
+
+            return experiencia;
+        }
+
+
+        public Experiencia GetExperienciaPorId(int id)
+        {
+            return _context.Experiencias.FirstOrDefault(e => e.Experienciaid == id);
+        }
+
+        public async Task<List<ExperienciasDTO>> GetByTalentoIdAsync(int talentoId)
+        {
+            return await _context.Experiencias
+                .Where(e => e.Talentoid == talentoId)
+                .Select(e => new ExperienciasDTO
+                {
+                    ExperienciaId = e.Experienciaid,
+                    TalentoId = e.Talentoid,
+                    Titulo = e.Titulo,
+                    Empresa = e.Empresa,
+                    AnoInicio = e.AnoInicio,
+                    AnoFim = e.AnoFim
+                })
+                .ToListAsync();
         }
 
 
         public void DeleteExperiencia(int id)
         {
-            var experiencia = _experiencias.FirstOrDefault(e => e.Experienciaid == id);
+            var experiencia = _context.Experiencias.FirstOrDefault(e => e.Experienciaid == id);
 
             if (experiencia == null)
                 throw new Exception("Experiência não encontrada.");
 
-            _experiencias.Remove(experiencia);
+            _context.Experiencias.Remove(experiencia);
+            _context.SaveChanges();
         }
     }
 }
