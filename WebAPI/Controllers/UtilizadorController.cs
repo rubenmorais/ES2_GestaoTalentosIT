@@ -113,12 +113,26 @@ namespace WebAPI.Controllers
             }
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> AtualizarUtilizador(int id, [FromBody] UserUpdateDto dto)
+        public IActionResult AtualizarUtilizador(int id, [FromBody] UpdateUtilizadorDTO dto)
         {
-            var resultado = await _utilizadorService.AtualizarUtilizador(id, dto);
-            if (!resultado) return NotFound();
-            return Ok("Utilizador atualizado com sucesso.");
+            try
+            {
+                _utilizadorService.UpdateUtilizador(id, dto);
+                return Ok("Utilizador atualizado com sucesso.");
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("Utilizador não encontrado"))
+                    return NotFound(ex.Message);
+
+                if (ex.Message.Contains("e-mail"))
+                    return Conflict(ex.Message);
+
+                return BadRequest($"Erro ao atualizar: {ex.Message}");
+            }
         }
+
+
         [HttpDelete("{id}")]
         public ActionResult DeleteUtilizador(int id)
         {
