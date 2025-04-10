@@ -1,6 +1,9 @@
 using Frontend.DtoClasses;
-using Frontend.DTOClasses;
 using Microsoft.AspNetCore.Components.Authorization;
+using WebAPI.DTOClasses;
+using UpdateUtilizadorAdminDTO = Frontend.DTOClasses.UpdateUtilizadorAdminDTO;
+using UpdateUtilizadorDTO = Frontend.DTOClasses.UpdateUtilizadorDTO;
+using UtilizadorDTO = Frontend.DTOClasses.UtilizadorDTO;
 
 namespace Frontend.Services
 {

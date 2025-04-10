@@ -8,10 +8,10 @@ namespace WebAPI.DTOClasses
         [Required, MaxLength(50)] 
         public string Nome { get; set; }
         
-        [Required, MaxLength(50)] 
+        [Required] 
         public int Categoriaid { get; set; }
         
-        [Required, MaxLength(50)] 
+        [Required] 
         public int Criadorid { get; set; }
     }
 }    

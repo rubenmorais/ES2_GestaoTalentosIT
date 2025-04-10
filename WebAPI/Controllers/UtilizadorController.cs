@@ -28,13 +28,13 @@ namespace WebAPI.Controllers
                 return BadRequest(ex.Message); 
             }
         }
+        
         [HttpPost("create")]
         public ActionResult CreateUtilizador([FromBody] CreateUtilizadorDTO createUtilizadorDTO)
         {
             try
             {
                 _utilizadorService.CreateUtilizador(createUtilizadorDTO);
-                
                 return CreatedAtAction(nameof(GetAllUsers), new { nome = createUtilizadorDTO.Nome }, createUtilizadorDTO);
             }
             catch (Exception ex)
@@ -43,7 +43,6 @@ namespace WebAPI.Controllers
                 {
                     return Conflict(ex.Message); 
                 }
-
                 return BadRequest($"Erro ao criar o utilizador: {ex.Message}"); 
             }
         }
@@ -62,15 +61,14 @@ namespace WebAPI.Controllers
                 {
                     return Conflict(ex.Message); 
                 }
-
                 if (ex.Message.Contains("Utilizador não encontrado"))
                 {
                     return NotFound(ex.Message); 
                 }
-                
                 return BadRequest($"Erro ao atualizar o utilizador: {ex.Message}");
             }
         }
+        
         [HttpPut("admin/{id}")]
         public ActionResult UpdateUtilizadorAdmin(int id, [FromBody] UpdateUtilizadorAdminDTO updateUtilizadorDTO)
         {
@@ -85,12 +83,10 @@ namespace WebAPI.Controllers
                 {
                     return Conflict(ex.Message); 
                 }
-
                 if (ex.Message.Contains("Utilizador não encontrado"))
                 {
                     return NotFound(ex.Message); 
                 }
-                
                 return BadRequest($"Erro ao atualizar o utilizador: {ex.Message}");
             }
         }
@@ -112,27 +108,7 @@ namespace WebAPI.Controllers
                 return BadRequest($"Erro ao recuperar o utilizador: {ex.Message}"); 
             }
         }
-        [HttpPut("{id}")]
-        public IActionResult AtualizarUtilizador(int id, [FromBody] UpdateUtilizadorDTO dto)
-        {
-            try
-            {
-                _utilizadorService.UpdateUtilizador(id, dto);
-                return Ok("Utilizador atualizado com sucesso.");
-            }
-            catch (Exception ex)
-            {
-                if (ex.Message.Contains("Utilizador não encontrado"))
-                    return NotFound(ex.Message);
-
-                if (ex.Message.Contains("e-mail"))
-                    return Conflict(ex.Message);
-
-                return BadRequest($"Erro ao atualizar: {ex.Message}");
-            }
-        }
-
-
+        
         [HttpDelete("{id}")]
         public ActionResult DeleteUtilizador(int id)
         {
@@ -146,6 +122,7 @@ namespace WebAPI.Controllers
                 return NotFound($"{ex.Message}"); 
             }
         }
+        
         [HttpGet("isadmin/{id}")]
         public ActionResult<bool> IsAdmin(int id)
         {
@@ -160,14 +137,14 @@ namespace WebAPI.Controllers
             }
         }
         
+        // Método para obter o perfil (não possui rota HTTP definida, se precisar, adicione um [HttpGet])
+        [HttpGet("perfil")]
         public ActionResult<UpdateUtilizadorDTO> GetPerfil()
         {
             int userId = 1;
-
             var utilizadorDTO = _utilizadorService.GetUpdateUtilizadorDTO(userId);
             if (utilizadorDTO == null)
                 return NotFound("Utilizador não encontrado.");
-
             return Ok(utilizadorDTO);
         }
 
@@ -176,13 +153,8 @@ namespace WebAPI.Controllers
         public IActionResult AtualizarPerfil([FromBody] UpdateUtilizadorDTO dto)
         {
             int userId = 1;
-
             _utilizadorService.UpdateUtilizador(userId, dto);
             return Ok("Perfil atualizado com sucesso.");
         }
-
-
     }
-
-
 }

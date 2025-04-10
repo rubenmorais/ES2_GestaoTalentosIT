@@ -1,6 +1,8 @@
 using Frontend.DtoClasses;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
+using WebAPI.DTOClasses;
+using LoginDTO = Frontend.DtoClasses.LoginDTO;
 
 namespace Frontend.Services
 {
