@@ -112,7 +112,13 @@ namespace WebAPI.Controllers
                 return BadRequest($"Erro ao recuperar o utilizador: {ex.Message}"); 
             }
         }
-        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> AtualizarUtilizador(int id, [FromBody] UserUpdateDto dto)
+        {
+            var resultado = await _utilizadorService.AtualizarUtilizador(id, dto);
+            if (!resultado) return NotFound();
+            return Ok("Utilizador atualizado com sucesso.");
+        }
         [HttpDelete("{id}")]
         public ActionResult DeleteUtilizador(int id)
         {
@@ -139,5 +145,25 @@ namespace WebAPI.Controllers
                 return BadRequest($"Erro ao verificar se o utilizador é admin: {ex.Message}");
             }
         }
+        [HttpPost("{id}/habilidades")]
+        public async Task<IActionResult> AdicionarHabilidade(int id, [FromBody] AddHabilidadeDTO dto)
+        {
+            var resultado = await _utilizadorService.AdicionarHabilidade(id, dto);
+            if (!resultado) return NotFound("Utilizador não encontrado.");
+            return Ok("Habilidade adicionada com sucesso.");
+        }
+
+        [HttpPost("{id}/experiencias")]
+        public async Task<IActionResult> AdicionarExperiencia(int id, [FromBody] AddExperienciaDTO dto)
+        {
+            var resultado = await _utilizadorService.AdicionarExperiencia(id, dto);
+            if (!resultado) return NotFound("Utilizador não encontrado.");
+            return Ok("Experiência adicionada com sucesso.");
+        }
+
+    }
+
+    public class UserUpdateDto
+    {
     }
 }
