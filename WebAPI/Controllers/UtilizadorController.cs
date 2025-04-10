@@ -71,6 +71,30 @@ namespace WebAPI.Controllers
                 return BadRequest($"Erro ao atualizar o utilizador: {ex.Message}");
             }
         }
+        [HttpPut("admin/{id}")]
+        public ActionResult UpdateUtilizadorAdmin(int id, [FromBody] UpdateUtilizadorAdminDTO updateUtilizadorDTO)
+        {
+            try
+            {
+                _utilizadorService.UpdateUtilizadorAdmin(id, updateUtilizadorDTO);
+                return NoContent(); 
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("Este e-mail já está a ser utilizado"))
+                {
+                    return Conflict(ex.Message); 
+                }
+
+                if (ex.Message.Contains("Utilizador não encontrado"))
+                {
+                    return NotFound(ex.Message); 
+                }
+                
+                return BadRequest($"Erro ao atualizar o utilizador: {ex.Message}");
+            }
+        }
+        
         [HttpGet("{id}")]
         public ActionResult<UtilizadorDTO> GetUserById(int id)
         {
@@ -88,8 +112,6 @@ namespace WebAPI.Controllers
                 return BadRequest($"Erro ao recuperar o utilizador: {ex.Message}"); 
             }
         }
-
-
         
         [HttpDelete("{id}")]
         public ActionResult DeleteUtilizador(int id)
@@ -101,7 +123,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound($"Erro ao deletar utilizador: {ex.Message}"); 
+                return NotFound($"{ex.Message}"); 
             }
         }
         [HttpGet("isadmin/{id}")]

@@ -1,0 +1,346 @@
+@page "/utilizadores"
+@rendermode InteractiveServer
+@using Frontend.DtoClasses
+@using Frontend.DTOClasses
+@using Frontend.Services
+@inject UtilizadorService UtilizadorService
+
+<PageTitle>Utilizadores</PageTitle>
+
+<h1>Lista de Utilizadores</h1>
+@if (!string.IsNullOrEmpty(registrationErrorMessage))
+{
+    <div class="alert alert-danger">
+        @registrationErrorMessage
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(registrationSuccessMessage))
+{
+    <div class="alert alert-success">
+        @registrationSuccessMessage
+    </div>
+}
+
+<input type="text" @oninput="AtualizarPesquisa" placeholder="Pesquisar utilizadores" class="form-control mb-2" />
+
+@if (utilizadores == null)
+{
+    <p>A carregar utilizadores...</p>
+}
+else if (filteredUtilizadores.Count == 0)
+{
+    <p>Nenhum utilizador encontrado.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Tipo</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var utilizador in UtilizadoresNaPagina)
+        {
+            @if (isAdmin || utilizador.Utilizadorid == UtilizadorIdLogado)
+            {
+                <tr>
+                    <td>@utilizador.Nome</td>
+                    <td>@utilizador.Email</td>
+                    <td>@utilizador.Tipo</td>
+                    <td>
+                        @if (isAdmin)
+                        {
+                            <button class="btn btn-warning" @onclick="() => AbrirModalEdicao(utilizador)">Editar</button>
+                            <button class="btn btn-danger" @onclick="() => ApagarUtilizador(utilizador.Utilizadorid)">Apagar</button>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+
+    <div class="pagination d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-secondary" @onclick="PaginaAnterior" disabled="@(!PodeIrParaPaginaAnterior)">Anterior</button>
+            <span>Página @paginaAtual de @totalPaginas</span>
+            <button class="btn btn-secondary" @onclick="PaginaProxima" disabled="@(!PodeIrParaPaginaProxima)">Próxima</button>
+        </div>
+    </div>
+}
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <button class="btn btn-success" @onclick="AbrirModal">Adicionar Utilizador</button>
+</div>
+
+@if (mostrarModal)
+{
+    <div class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@((isEditing ? "Editar Utilizador" : "Adicionar Utilizador"))</h5>
+                </div>
+                <div class="modal-body">
+                    @if (registrationFailed)
+                    {
+                        <div class="alert alert-danger mt-3" role="alert">
+                            <strong>Erro:</strong> @registrationErrorMessage
+                        </div>
+                    }
+                    <EditForm Model="novoUtilizador" OnValidSubmit="AdicionarUtilizador" OnInvalidSubmit="ExibirErroValidacao">
+                        <DataAnnotationsValidator />
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="Nome">Nome:</label>
+                            <InputText id="Nome" class="form-control" @bind-Value="novoUtilizador.Nome" />
+                            <ValidationMessage For="@(() => novoUtilizador.Nome)" />
+                        </div>
+
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="Email">Email:</label>
+                            <InputText id="Email" class="form-control" @bind-Value="novoUtilizador.Email" />
+                            <ValidationMessage For="@(() => novoUtilizador.Email)" />
+                        </div>
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="Tipo">Tipo:</label>
+                            <InputSelect id="tipo" class="form-control" @bind-Value="novoUtilizador.Tipoid">
+                                <option value="1">Administrador</option>
+                                <option value="2">Utilizador</option>
+                                <option value="3">Gestor de Utilizadores</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => novoUtilizador.Tipoid)" />
+                        </div>
+                    </EditForm>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success" @onclick="OnSubmit">@((isEditing ? "Atualizar" : "Guardar"))</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<UtilizadorDTO>? utilizadores;
+    private string searchTerm = "";
+    private bool mostrarModal = false;
+    private CreateUtilizadorDTO novoUtilizador = new();
+    private int? UtilizadorIdLogado;
+    private bool isAdmin = false;
+    private int paginaAtual = 1;
+    private int itensPorPagina = 10;
+    private int totalPaginas => (int)Math.Ceiling((double)(filteredUtilizadores.Count) / itensPorPagina);
+    private bool isEditing = false;
+    private int utilizadorIdEmEdicao = 0;
+    
+    private string? registrationErrorMessage;
+    private bool registrationFailed = false;
+    private string registrationSuccessMessage;
+
+    private List<UtilizadorDTO> filteredUtilizadores =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? utilizadores ?? new List<UtilizadorDTO>()
+            : utilizadores?.Where(u =>
+                u.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Tipo.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList() ?? new List<UtilizadorDTO>();
+
+    private List<UtilizadorDTO> UtilizadoresNaPagina
+    {
+        get
+        {
+            return filteredUtilizadores
+                .Skip((paginaAtual - 1) * itensPorPagina)
+                .Take(itensPorPagina)
+                .ToList();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UtilizadorIdLogado = await UtilizadorService.GetUserIdAsync();
+            isAdmin = await UtilizadorService.IsAdminAsync();
+            await CarregarUtilizadores();
+        }
+    }
+
+    private async Task CarregarUtilizadores()
+    {
+        utilizadores = await UtilizadorService.GetAllUsersAsync();
+        StateHasChanged();
+    }
+
+    private void AtualizarPesquisa(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+
+    private async Task ApagarUtilizador(int id)
+    {
+        var mensagem = await UtilizadorService.DeleteUtilizadorAsync(id);
+
+        if (mensagem == "Utilizador apagado com sucesso!")
+        {
+            registrationSuccessMessage = mensagem;  
+            registrationErrorMessage = string.Empty; 
+            Console.WriteLine(mensagem);
+            utilizadores?.RemoveAll(u => u.Utilizadorid == id);
+            StateHasChanged();
+        }
+        else
+        {
+            registrationErrorMessage = mensagem; 
+            registrationSuccessMessage = string.Empty; 
+            Console.WriteLine($" {mensagem}");
+            StateHasChanged(); 
+        }
+    }
+
+
+    private void AbrirModal()
+    {
+        novoUtilizador = new CreateUtilizadorDTO();
+        mostrarModal = true;
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        isEditing = false;
+        utilizadorIdEmEdicao = 0;
+    }
+
+    private void ExibirErroValidacao()
+    {
+        registrationErrorMessage = "Existem erros no formulário. Por favor, corrija e tente novamente.";
+        registrationFailed = true;
+        StateHasChanged();
+    }
+
+    private async Task OnSubmit()
+    {
+        if (isEditing)
+        {
+            await AtualizarUtilizador();
+        }
+        else
+        {
+            await AdicionarUtilizador();
+        }
+    }
+
+    private async Task AdicionarUtilizador()
+    {
+        try
+        {
+            var resultado = await UtilizadorService.CreateUtilizadorAsync(novoUtilizador);
+            if (resultado != null)
+            {
+                mostrarModal = false;
+                await CarregarUtilizadores();
+            }
+            else
+            {
+                registrationErrorMessage = "Erro ao adicionar utilizador.";
+                registrationFailed = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            registrationErrorMessage = $"Erro ao adicionar utilizador: {ex.Message}";
+            registrationFailed = true;
+            StateHasChanged();
+        }
+    }
+
+    private void AbrirModalEdicao(UtilizadorDTO utilizador)
+    {
+        isEditing = true;
+        utilizadorIdEmEdicao = utilizador.Utilizadorid;
+
+        novoUtilizador = new CreateUtilizadorDTO
+        {
+            Nome = utilizador.Nome,
+            Email = utilizador.Email,
+            Tipoid = utilizador.Tipoid
+        };
+
+        registrationFailed = false;
+        registrationErrorMessage = "";
+        mostrarModal = true;
+    }
+
+    private async Task AtualizarUtilizador()
+    {
+        try
+        {
+        
+            if (string.IsNullOrWhiteSpace(novoUtilizador.Nome) || string.IsNullOrWhiteSpace(novoUtilizador.Email) || novoUtilizador.Tipoid <= 0)
+            {
+                registrationErrorMessage = "Todos os campos são obrigatórios.";
+                registrationFailed = true;
+                return;  
+            }
+
+            var utilizadorAtualizado = new UpdateUtilizadorAdminDTO()
+            {
+                Nome = novoUtilizador.Nome,
+                Email = novoUtilizador.Email,
+                Tipoid = novoUtilizador.Tipoid
+            };
+            
+            var resultado = await UtilizadorService.UpdateUtilizadorAdminAsync(utilizadorIdEmEdicao, utilizadorAtualizado);
+
+            if (resultado)
+            {
+                
+                mostrarModal = false;
+                isEditing = false;
+                await CarregarUtilizadores();
+            }
+            else
+            {
+                registrationErrorMessage = "Erro ao atualizar utilizador: Resposta do servidor não foi bem-sucedida.";
+                registrationFailed = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            registrationErrorMessage = $"{ex.Message}";
+            registrationFailed = true;
+        }
+    }
+
+    private bool PodeIrParaPaginaAnterior => paginaAtual > 1;
+    private bool PodeIrParaPaginaProxima => paginaAtual < totalPaginas;
+
+    private void PaginaAnterior()
+    {
+        if (paginaAtual > 1)
+        {
+            paginaAtual--;
+            StateHasChanged();
+        }
+    }
+
+    private void PaginaProxima()
+    {
+        if (paginaAtual < totalPaginas)
+        {
+            paginaAtual++;
+            StateHasChanged();
+        }
+    }
+}

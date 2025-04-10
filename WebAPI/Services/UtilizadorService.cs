@@ -116,6 +116,43 @@ namespace WebAPI.Services
                 throw new Exception($"Erro ao atualizar o utilizador: {ex.Message}", ex);
             }
         }
+        
+        public void UpdateUtilizadorAdmin(int utilizadorId, UpdateUtilizadorAdminDTO updateUtilizadorDTO)
+        {
+            try
+            {
+                var utilizador = _context.Utilizadores.FirstOrDefault(u => u.Utilizadorid == utilizadorId);
+        
+                if (utilizador == null)
+                {
+                    throw new Exception("Utilizador não encontrado.");
+                }
+                
+                var existingEmailUser = _context.Utilizadores
+                    .FirstOrDefault(u => u.Email == updateUtilizadorDTO.Email && u.Utilizadorid != utilizadorId);
+
+                if (existingEmailUser != null)
+                {
+                    throw new Exception("Este e-mail já está a ser utilizado por outro utilizador.");
+                }
+                
+                var tipoExistente = _context.Tipos.FirstOrDefault(t => t.Tipoid == updateUtilizadorDTO.Tipoid);
+                if (tipoExistente == null)
+                {
+                    throw new Exception("Tipo de utilizador inválido.");
+                }
+                
+                utilizador.Nome = updateUtilizadorDTO.Nome;
+                utilizador.Email = updateUtilizadorDTO.Email;
+                utilizador.Tipoid = updateUtilizadorDTO.Tipoid;
+                
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar o utilizador: {ex.Message}", ex);
+            }
+        }
 
         public void DeleteUtilizador(int id)
         {
@@ -127,12 +164,31 @@ namespace WebAPI.Services
                     throw new Exception("Utilizador não encontrado.");
                 }
                 
+                var tabelasAssociadas = new (string Tabela, Func<int, bool> Verificar)[]
+                {
+                    ("Habilidades", (id) => _context.Habilidades.Any(h => h.Criadorid == id)),
+                    ("Talentos", (id) => _context.Talentos.Any(t => t.Utilizadorid == id)),
+                };
+                
+                foreach (var tabela in tabelasAssociadas)
+                {
+                    if (tabela.Verificar(id))
+                    {
+                        throw new Exception($"O utilizador não pode ser apagado, pois possui registos associados em {tabela.Tabela}.");
+                    }
+                }
+                
                 _context.Utilizadores.Remove(utilizador);
                 _context.SaveChanges(); 
             }
             catch (Exception ex)
             {
-                throw new Exception("Ocorreu um erro ao excluir o utilizador.", ex);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Erro interno: {ex.InnerException.Message}");
+                }
+
+                throw new Exception($"Erro ao apagar utilizador: {ex.Message}", ex);
             }
         }
         public bool IsAdmin(int utilizadorId)
