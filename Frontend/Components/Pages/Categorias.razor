@@ -77,16 +77,17 @@ else
                             <strong>Erro:</strong> @modalErrorMessage
                         </div>
                     }
-                    <EditForm Model="categoriaParaEditar" OnValidSubmit="OnSubmit" OnInvalidSubmit="ExibirErroValidacao">
+
+                    <EditForm Model="@ModalModel" OnValidSubmit="OnSubmit" OnInvalidSubmit="ExibirErroValidacao">
                         <DataAnnotationsValidator />
-                        <div class="form-group" style="margin-top: 10px">
+                        <div class="form-group mt-3">
                             <label for="Categoria">Categoria:</label>
-                            <InputText id="Categoria" class="form-control" @bind-Value="categoriaParaEditar.Categoria" />
-                            <ValidationMessage For="@(() => categoriaParaEditar.Categoria)" />
+                            <InputText id="Categoria" class="form-control" @bind-Value="CategoriaInput" />
+                            <ValidationMessage For="@(() => ModalModel)" />
                         </div>
 
                         <div class="modal-footer">
-                            <button class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
+                            <button type="button" class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
                             <button type="submit" class="btn btn-success">@((isEditing ? "Atualizar" : "Guardar"))</button>
                         </div>
                     </EditForm>
@@ -95,6 +96,7 @@ else
         </div>
     </div>
 }
+
 
 @code {
     private List<CategoriaDTO>? categorias;
@@ -107,6 +109,19 @@ else
     private string? modalErrorMessage;
     private string? pageErrorMessage;
     private string? registrationSuccessMessage;
+    private object ModalModel => isEditing ? categoriaParaEditar : novaCategoria;
+
+    private string CategoriaInput
+    {
+        get => isEditing ? categoriaParaEditar.Categoria : novaCategoria.Categoria;
+        set
+        {
+            if (isEditing)
+                categoriaParaEditar.Categoria = value;
+            else
+                novaCategoria.Categoria = value;
+        }
+    }
 
     private List<CategoriaDTO> filteredCategorias =>
         string.IsNullOrWhiteSpace(searchTerm)
