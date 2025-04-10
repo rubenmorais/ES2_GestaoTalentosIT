@@ -156,6 +156,8 @@ else
         }
         else
         {
+            var errorMsg = await response.Content.ReadAsStringAsync();
+            validacaoMensagem = $"{errorMsg}";
             Console.WriteLine("Erro ao criar experiência");
         }
     }
