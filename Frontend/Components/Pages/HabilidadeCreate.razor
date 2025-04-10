@@ -1,8 +1,10 @@
 ﻿@page "/habilidades/create"
 
 @using Frontend.DtoClasses
-@inject HttpClient Http
+@using Frontend.Services
+@rendermode InteractiveServer
 @inject NavigationManager NavManager
+@inject HabilidadeService HabilidadeService
 
 <h3>Criar Nova Habilidade</h3>
 
@@ -19,23 +21,24 @@
     <input id="criador" type="number" class="form-control" @bind="habilidade.Criadorid" />
 </div>
 
-<button class="btn btn-success" @onclick="Salvar">Salvar</button>
+<button class="btn btn-success" @onclick="Salvar">Guardar</button>
 <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
 
 @code {
-    private HabilidadeDto habilidade = new();
+    // Utilizando o DTO específico para criação (ajuste se necessário)
+    private CreateHabilidadeDTO habilidade = new();
 
     private async Task Salvar()
     {
-        // Chama o endpoint POST: https://localhost:5001/api/habilidades
-        var response = await Http.PostAsJsonAsync("api/habilidades", habilidade);
-        if (response.IsSuccessStatusCode)
+        // Chama o método do HabilidadeService que já está configurado com BaseAddress
+        var erro = await HabilidadeService.CreateHabilidadeAsync(habilidade);
+        if (erro == null)
         {
+            // Sucesso: navega para a página de listagem de habilidades
             NavManager.NavigateTo("/habilidades");
         }
         else
         {
-            var erro = await response.Content.ReadAsStringAsync();
             await AlertAsync($"Erro ao criar a habilidade: {erro}");
         }
     }
@@ -47,6 +50,7 @@
 
     private Task AlertAsync(string message)
     {
+        // Aqui, você pode integrar um modal ou alert usando IJSRuntime.
         Console.WriteLine(message);
         return Task.CompletedTask;
     }

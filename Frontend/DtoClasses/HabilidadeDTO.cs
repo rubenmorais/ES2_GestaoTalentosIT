@@ -1,6 +1,6 @@
 ﻿namespace Frontend.DtoClasses
 {
-    public class HabilidadeDto
+    public class HabilidadeDTO
     {
         public int Habilidadeid { get; set; }
         public string Nome { get; set; } = string.Empty;

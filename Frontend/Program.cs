@@ -2,6 +2,10 @@ using Blazored.LocalStorage;
 using Frontend.Components;
 using Frontend.Services;
 using Microsoft.AspNetCore.Components.Authorization;
+using AuthService = Frontend.Services.AuthService;
+using ExperienciaService = Frontend.Services.ExperienciaService;
+using TalentoService = Frontend.Services.TalentoService;
+using UtilizadorService = Frontend.Services.UtilizadorService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +20,7 @@ builder.Services.AddScoped<TalentoService>();
 builder.Services.AddScoped<ExperienciaService>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<UtilizadorService>();
+builder.Services.AddScoped<HabilidadeService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient<AuthService>(client =>
@@ -29,6 +34,11 @@ builder.Services.AddHttpClient<ExperienciaService>(client =>
 });
 
 builder.Services.AddHttpClient<TalentoService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7070/");
+});
+
+builder.Services.AddHttpClient<HabilidadeService>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7070/");
 });

@@ -20,6 +20,7 @@ builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TalentoService>();
 builder.Services.AddScoped<ExperienciaService>();
+builder.Services.AddScoped<HabilidadeService>();
 
 
 var app = builder.Build();

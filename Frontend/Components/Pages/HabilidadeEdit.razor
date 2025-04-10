@@ -1,7 +1,9 @@
 ﻿@page "/habilidades/edit/{id:int}"
 @using Frontend.DtoClasses
-@inject HttpClient Http
+@using Frontend.Services
+@rendermode InteractiveServer
 @inject NavigationManager NavManager
+@inject HabilidadeService HabilidadeService
 
 <h3>Editar Habilidade</h3>
 
@@ -32,12 +34,12 @@ else
     [Parameter]
     public int id { get; set; }
 
-    private HabilidadeDto? habilidade;
+    private HabilidadeDTO? habilidade;
 
     protected override async Task OnParametersSetAsync()
     {
-        // Chama o endpoint GET para carregar a habilidade a editar
-        habilidade = await Http.GetFromJsonAsync<HabilidadeDto>($"api/habilidades/{id}");
+        // Utiliza o serviço para carregar a habilidade com base no id
+        habilidade = await HabilidadeService.GetHabilidadeByIdAsync(id);
         if (habilidade == null)
         {
             await AlertAsync("Habilidade não encontrada.");
@@ -50,16 +52,15 @@ else
         if (habilidade == null)
             return;
 
-        // Chama o endpoint PUT para atualizar a habilidade
-        var response = await Http.PutAsJsonAsync($"api/habilidades/{habilidade.Habilidadeid}", habilidade);
-        if (response.IsSuccessStatusCode)
+        try
         {
+            // Atualiza a habilidade usando o serviço
+            var updated = await HabilidadeService.UpdateHabilidadeAsync(habilidade);
             NavManager.NavigateTo("/habilidades");
         }
-        else
+        catch (Exception ex)
         {
-            var erro = await response.Content.ReadAsStringAsync();
-            await AlertAsync($"Erro ao atualizar a habilidade: {erro}");
+            await AlertAsync($"Erro ao atualizar a habilidade: {ex.Message}");
         }
     }
 
@@ -70,6 +71,7 @@ else
 
     private Task AlertAsync(string message)
     {
+        // Aqui você pode usar uma implementação de alerta mais elaborada (ex: IJSRuntime)
         Console.WriteLine(message);
         return Task.CompletedTask;
     }

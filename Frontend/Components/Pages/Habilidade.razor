@@ -1,14 +1,20 @@
 ﻿@page "/habilidades"
-
 @using Frontend.DtoClasses
-@inject HttpClient Http
+@using Frontend.Services
+@rendermode InteractiveServer
 @inject NavigationManager NavManager
+@inject HabilidadeService HabilidadeService
 
-<h3>Lista de Habilidades</h3>
+<PageTitle>Habilidades</PageTitle>
+
+<h1>Lista de Habilidades</h1>
+
+<input type="text" @oninput="AtualizarPesquisa" placeholder="Pesquisar Habilidades" class="form-control mb-2" />
+
 
 @if (habilidades == null)
 {
-    <p><em>Carregando...</em></p>
+    <p><em>A Carregar Habilidades...</em></p>
 }
 else if (!habilidades.Any())
 {
@@ -45,7 +51,8 @@ else
 <button class="btn btn-primary" @onclick="CriarNovaHabilidade">Criar Nova Habilidade</button>
 
 @code {
-    private List<HabilidadeDto>? habilidades;
+    private List<HabilidadeDTO>? habilidades;
+    private string searchTerm = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -54,12 +61,19 @@ else
 
     private async Task CarregarHabilidades()
     {
-        // Chama o endpoint GET: https://localhost:5001/api/habilidades
-        habilidades = await Http.GetFromJsonAsync<List<HabilidadeDto>>("api/habilidades");
+        // Agora você usa o HabilidadeService (que já tem BaseAddress configurado)
+        habilidades = await HabilidadeService.GetAllHabilidadesAsync();
+    }
+    
+    private void AtualizarPesquisa(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        StateHasChanged();
     }
 
     private void CriarNovaHabilidade()
     {
+        // Rota do FRONTEND, não da API
         NavManager.NavigateTo("/habilidades/create");
     }
 
@@ -72,24 +86,20 @@ else
     {
         if (await ConfirmAsync("Tem certeza que deseja apagar esta habilidade?"))
         {
-            var response = await Http.DeleteAsync($"api/habilidades/{id}");
-            if (response.IsSuccessStatusCode)
+            // Chama o método do serviço que já sabe chamar "api/habilidades/{id}"
+            var sucesso = await HabilidadeService.DeleteHabilidadeAsync(id);
+            if (sucesso)
             {
                 await CarregarHabilidades();
             }
             else
             {
-                var erro = await response.Content.ReadAsStringAsync();
-                await AlertAsync($"Erro ao apagar a habilidade: {erro}");
+                await AlertAsync("Erro ao apagar a habilidade.");
             }
         }
     }
 
-    // Métodos simples para simular dialogs de confirmação e alerta.
-    // Em um projeto real, você pode usar IJSRuntime para chamar métodos JavaScript.
-    private Task<bool> ConfirmAsync(string message) =>
-        Task.FromResult(true); // Retorne true para simular confirmação
-
+    private Task<bool> ConfirmAsync(string message) => Task.FromResult(true);
     private Task AlertAsync(string message)
     {
         Console.WriteLine(message);
