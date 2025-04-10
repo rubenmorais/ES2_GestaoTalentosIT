@@ -21,6 +21,8 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TalentoService>();
 builder.Services.AddScoped<ExperienciaService>();
 builder.Services.AddScoped<HabilidadeService>();
+builder.Services.AddScoped<CategoriaService>();
+
 
 
 var app = builder.Build();
