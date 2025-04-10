@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DbLayer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8dff23225c3abc30b95eb4d576d71b80e919a8b5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d237626f48f019a86c517117870e2e685d0ec695")]
 [assembly: System.Reflection.AssemblyProductAttribute("DbLayer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DbLayer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

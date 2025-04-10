@@ -170,7 +170,5 @@ namespace WebAPI.Controllers
 
     }
 
-    public class UserUpdateDto
-    {
-    }
+
 }

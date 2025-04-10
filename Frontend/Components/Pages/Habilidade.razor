@@ -61,7 +61,6 @@ else
 
     private async Task CarregarHabilidades()
     {
-        // Agora você usa o HabilidadeService (que já tem BaseAddress configurado)
         habilidades = await HabilidadeService.GetAllHabilidadesAsync();
     }
     
@@ -86,7 +85,6 @@ else
     {
         if (await ConfirmAsync("Tem certeza que deseja apagar esta habilidade?"))
         {
-            // Chama o método do serviço que já sabe chamar "api/habilidades/{id}"
             var sucesso = await HabilidadeService.DeleteHabilidadeAsync(id);
             if (sucesso)
             {
