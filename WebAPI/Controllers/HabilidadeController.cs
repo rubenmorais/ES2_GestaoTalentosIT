@@ -36,7 +36,7 @@ namespace WebAPI.Controllers
 
         // POST: api/habilidades
         [HttpPost]
-        public async Task<ActionResult<HabilidadeDTO>> CreateHabilidade(HabilidadeDTO dto)
+        public async Task<ActionResult<HabilidadeDTO>> CreateHabilidade(CreateHabilidadeDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Nome))
                 return BadRequest("Nome da habilidade é obrigatório.");
@@ -47,7 +47,7 @@ namespace WebAPI.Controllers
 
         // PUT: api/habilidades/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateHabilidade(int id, HabilidadeDTO dto)
+        public async Task<IActionResult> UpdateHabilidade(int id, UpdateHabilidadeDTO dto)
         {
             var success = await _service.UpdateAsync(id, dto);
             if (!success)

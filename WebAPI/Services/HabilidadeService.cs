@@ -41,9 +41,9 @@ namespace WebAPI.Services
             };
         }
 
-        public async Task<HabilidadeDTO> CreateAsync(HabilidadeDTO dto)
+        public async Task<HabilidadeDTO> CreateAsync(CreateHabilidadeDTO dto)
         {
-            if (string.IsNullOrEmpty(dto.Nome))
+            if (string.IsNullOrWhiteSpace(dto.Nome))
             {
                 throw new ArgumentException("Nome da habilidade é obrigatório.", nameof(dto.Nome));
             }
@@ -57,15 +57,19 @@ namespace WebAPI.Services
 
             _context.Habilidades.Add(habilidade);
             await _context.SaveChangesAsync();
-            dto.Habilidadeid = habilidade.Habilidadeid;
-            return dto;
+
+            // Retorna um DTO contendo o ID gerado e os dados salvos
+            return new HabilidadeDTO
+            {
+                Habilidadeid = habilidade.Habilidadeid,
+                Nome = habilidade.Nome,
+                Categoriaid = habilidade.Categoriaid,
+                Criadorid = habilidade.Criadorid
+            };
         }
 
-        public async Task<bool> UpdateAsync(int id, HabilidadeDTO dto)
+        public async Task<bool> UpdateAsync(int id, UpdateHabilidadeDTO dto)
         {
-            if (id != dto.Habilidadeid)
-                return false;
-
             var habilidade = await _context.Habilidades.FindAsync(id);
             if (habilidade == null)
                 return false;
