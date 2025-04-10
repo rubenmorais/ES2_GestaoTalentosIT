@@ -1,6 +1,5 @@
 using Frontend.DtoClasses;
 using Microsoft.AspNetCore.Components.Authorization;
-using WebAPI.DTOClasses;
 using UpdateUtilizadorAdminDTO = Frontend.DTOClasses.UpdateUtilizadorAdminDTO;
 using UpdateUtilizadorDTO = Frontend.DTOClasses.UpdateUtilizadorDTO;
 using UtilizadorDTO = Frontend.DTOClasses.UtilizadorDTO;
@@ -48,27 +47,29 @@ namespace Frontend.Services
 
             return isAdmin;
         }
-        public async Task<bool> UpdateUtilizadorAsync(int id, UpdateUtilizadorDTO updateUtilizadorDTO)
+        public async Task<string> UpdateUtilizadorAsync(int id, UpdateUtilizadorDTO updateUtilizadorDTO)
         {
             try
             {
                 var response = await _httpClient.PutAsJsonAsync($"https://localhost:7070/api/utilizador/{id}", updateUtilizadorDTO);
-                
+        
                 if (response.IsSuccessStatusCode)
                 {
-                    return true; 
+                    return string.Empty; 
                 }
                 else
                 {
-                    return false; 
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    return errorMessage; 
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao atualizar utilizador: {ex.Message}");
-                return false; 
+                return $"Erro inesperado: {ex.Message}";
             }
         }
+
         public async Task<bool> UpdateUtilizadorAdminAsync(int id, UpdateUtilizadorAdminDTO updateUtilizadorDTO)
         {
             try

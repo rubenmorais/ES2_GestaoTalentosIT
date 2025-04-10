@@ -24,7 +24,7 @@
 
 @if (updateUtilizador != null)
 {
-    <EditForm Model="@updateUtilizador" OnValidSubmit="GuardarAlteracoes">
+    <EditForm Model="@updateUtilizador" OnValidSubmit="GuardarAlteracoes" OnInvalidSubmit="MostrarErro">
         <DataAnnotationsValidator />
 
         <div class="form-group" style="margin-top: 10px">
@@ -114,6 +114,14 @@ else
     {
         mensagemSucesso = null;
         mensagemErro = null;
+        
+        if (string.IsNullOrWhiteSpace(updateUtilizador?.Nome) ||
+            string.IsNullOrWhiteSpace(updateUtilizador?.Email) ||
+            string.IsNullOrWhiteSpace(updateUtilizador?.PalavraPasse))
+        {
+            mensagemErro = "Todos os campos devem ser preenchidos.";
+            return;
+        }
 
         if (updateUtilizador == null || utilizador == null)
             return;
@@ -123,13 +131,18 @@ else
             updateUtilizador
         );
 
-        if (resultado)
+        if (string.IsNullOrEmpty(resultado)) 
         {
             mensagemSucesso = "Perfil atualizado com sucesso!";
         }
         else
         {
-            mensagemErro = "Ocorreu um erro ao guardar as alterações.";
+            mensagemErro = resultado; 
         }
+        
+    }
+    private void MostrarErro()
+    {
+        mensagemErro = "Todos os campos devem ser preenchidos.";
     }
 }

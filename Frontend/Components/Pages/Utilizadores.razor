@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @using Frontend.DtoClasses
 @using Frontend.Services
-@using WebAPI.DTOClasses
 @using UpdateUtilizadorAdminDTO = Frontend.DTOClasses.UpdateUtilizadorAdminDTO
 @using UtilizadorDTO = Frontend.DTOClasses.UtilizadorDTO
 @inject UtilizadorService UtilizadorService
@@ -10,10 +9,10 @@
 <PageTitle>Utilizadores</PageTitle>
 
 <h1>Lista de Utilizadores</h1>
-@if (!string.IsNullOrEmpty(registrationErrorMessage))
+@if (!string.IsNullOrEmpty(pageErrorMessage))
 {
     <div class="alert alert-danger">
-        @registrationErrorMessage
+        @pageErrorMessage
     </div>
 }
 
@@ -89,10 +88,10 @@ else
                     <h5 class="modal-title">@((isEditing ? "Editar Utilizador" : "Adicionar Utilizador"))</h5>
                 </div>
                 <div class="modal-body">
-                    @if (registrationFailed)
+                    @if (!string.IsNullOrEmpty(modalErrorMessage))
                     {
                         <div class="alert alert-danger mt-3" role="alert">
-                            <strong>Erro:</strong> @registrationErrorMessage
+                            <strong>Erro:</strong> @modalErrorMessage
                         </div>
                     }
                     <EditForm Model="novoUtilizador" OnValidSubmit="AdicionarUtilizador" OnInvalidSubmit="ExibirErroValidacao">
@@ -143,7 +142,9 @@ else
     private bool isEditing = false;
     private int utilizadorIdEmEdicao = 0;
     
+    private string? modalErrorMessage;
     private string? registrationErrorMessage;
+    private string? pageErrorMessage;
     private bool registrationFailed = false;
     private string registrationSuccessMessage;
 
@@ -196,16 +197,14 @@ else
         if (mensagem == "Utilizador apagado com sucesso!")
         {
             registrationSuccessMessage = mensagem;  
-            registrationErrorMessage = string.Empty; 
-            Console.WriteLine(mensagem);
+            pageErrorMessage = string.Empty;  
             utilizadores?.RemoveAll(u => u.Utilizadorid == id);
             StateHasChanged();
         }
         else
         {
-            registrationErrorMessage = mensagem; 
+            pageErrorMessage = mensagem;  
             registrationSuccessMessage = string.Empty; 
-            Console.WriteLine($" {mensagem}");
             StateHasChanged(); 
         }
     }
@@ -214,6 +213,8 @@ else
     private void AbrirModal()
     {
         novoUtilizador = new CreateUtilizadorDTO();
+        modalErrorMessage = string.Empty; 
+        pageErrorMessage = string.Empty;
         mostrarModal = true;
     }
 
@@ -222,6 +223,7 @@ else
         mostrarModal = false;
         isEditing = false;
         utilizadorIdEmEdicao = 0;
+        modalErrorMessage = string.Empty; 
     }
 
     private void ExibirErroValidacao()
@@ -255,14 +257,12 @@ else
             }
             else
             {
-                registrationErrorMessage = "Erro ao adicionar utilizador.";
-                registrationFailed = true;
+                modalErrorMessage = "Erro ao adicionar utilizador.";  // Mensagem de erro do modal
             }
         }
         catch (Exception ex)
         {
-            registrationErrorMessage = $"Erro ao adicionar utilizador: {ex.Message}";
-            registrationFailed = true;
+            modalErrorMessage = $"Erro ao adicionar utilizador: {ex.Message}";  // Mensagem de erro do modal
             StateHasChanged();
         }
     }
@@ -288,11 +288,9 @@ else
     {
         try
         {
-        
             if (string.IsNullOrWhiteSpace(novoUtilizador.Nome) || string.IsNullOrWhiteSpace(novoUtilizador.Email) || novoUtilizador.Tipoid <= 0)
             {
-                registrationErrorMessage = "Todos os campos são obrigatórios.";
-                registrationFailed = true;
+                modalErrorMessage = "Todos os campos são obrigatórios."; 
                 return;  
             }
 
@@ -302,28 +300,26 @@ else
                 Email = novoUtilizador.Email,
                 Tipoid = novoUtilizador.Tipoid
             };
-            
+
             var resultado = await UtilizadorService.UpdateUtilizadorAdminAsync(utilizadorIdEmEdicao, utilizadorAtualizado);
 
             if (resultado)
             {
-                
                 mostrarModal = false;
                 isEditing = false;
                 await CarregarUtilizadores();
             }
             else
             {
-                registrationErrorMessage = "Erro ao atualizar utilizador: Resposta do servidor não foi bem-sucedida.";
-                registrationFailed = true;
+                modalErrorMessage = "Erro ao atualizar utilizador: Resposta do servidor não foi bem-sucedida.";
             }
         }
         catch (Exception ex)
         {
-            registrationErrorMessage = $"{ex.Message}";
-            registrationFailed = true;
+            modalErrorMessage = $"{ex.Message}";  
         }
     }
+
 
     private bool PodeIrParaPaginaAnterior => paginaAtual > 1;
     private bool PodeIrParaPaginaProxima => paginaAtual < totalPaginas;
