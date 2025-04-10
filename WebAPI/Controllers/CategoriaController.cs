@@ -3,6 +3,7 @@ using WebAPI.Services;
 using WebAPI.DTOClasses;
 using System;
 using System.Collections.Generic;
+using WebAPI.DtoClasses;
 
 namespace WebAPI.Controllers
 {
@@ -63,7 +64,7 @@ namespace WebAPI.Controllers
         }
         
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] CreateCategoriaDTO dto)
+        public IActionResult Update(int id, [FromBody] UpdateCategoriaDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -89,7 +90,7 @@ namespace WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound(ex.Message);
+                return BadRequest(ex.Message); 
             }
         }
     }

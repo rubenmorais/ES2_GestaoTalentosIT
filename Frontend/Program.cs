@@ -21,6 +21,7 @@ builder.Services.AddScoped<ExperienciaService>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddScoped<HabilidadeService>();
+builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient<AuthService>(client =>

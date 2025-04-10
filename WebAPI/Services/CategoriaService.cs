@@ -1,5 +1,6 @@
 using DbLayer.Context;
 using DbLayer.Models;
+using WebAPI.DtoClasses;
 using WebAPI.DTOClasses;
 
 
@@ -78,7 +79,7 @@ namespace WebAPI.Services
             }
         }
         
-        public void UpdateCategoria(int id, CreateCategoriaDTO dto)
+        public void UpdateCategoria(int id, UpdateCategoriaDTO dto)
         {
             try
             {
@@ -114,14 +115,34 @@ namespace WebAPI.Services
                 {
                     throw new Exception("Categoria não encontrada.");
                 }
-
+                
+                var tabelasAssociadas = new (string Tabela, Func<int, bool> Verificar)[] 
+                {
+                    ("Habilidades", (id) => _context.Habilidades.Any(p => p.Categoriaid == id)),
+                   
+                };
+                
+                foreach (var tabela in tabelasAssociadas)
+                {
+                    if (tabela.Verificar(id))
+                    {
+                        throw new Exception($"A categoria não pode ser apagada, pois possui registos associados em {tabela.Tabela}.");
+                    }
+                }
+                
                 _context.CategoriasProfissionais.Remove(categoria);
                 _context.SaveChanges();
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Erro interno: {ex.InnerException.Message}");
+                }
+
+                throw new Exception($"Erro ao apagar categoria: {ex.Message}", ex);
             }
         }
+
     }
 }
