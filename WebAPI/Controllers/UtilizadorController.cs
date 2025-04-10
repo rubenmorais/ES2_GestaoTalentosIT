@@ -112,7 +112,13 @@ namespace WebAPI.Controllers
                 return BadRequest($"Erro ao recuperar o utilizador: {ex.Message}"); 
             }
         }
-        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> AtualizarUtilizador(int id, [FromBody] UserUpdateDto dto)
+        {
+            var resultado = await _utilizadorService.AtualizarUtilizador(id, dto);
+            if (!resultado) return NotFound();
+            return Ok("Utilizador atualizado com sucesso.");
+        }
         [HttpDelete("{id}")]
         public ActionResult DeleteUtilizador(int id)
         {
@@ -139,5 +145,32 @@ namespace WebAPI.Controllers
                 return BadRequest($"Erro ao verificar se o utilizador é admin: {ex.Message}");
             }
         }
+        
+        public ActionResult<UpdateUtilizadorDTO> GetPerfil()
+        {
+            int userId = 1;
+
+            var utilizadorDTO = _utilizadorService.GetUpdateUtilizadorDTO(userId);
+            if (utilizadorDTO == null)
+                return NotFound("Utilizador não encontrado.");
+
+            return Ok(utilizadorDTO);
+        }
+
+        [HttpPut("perfil")]
+        [Authorize]
+        public IActionResult AtualizarPerfil([FromBody] UpdateUtilizadorDTO dto)
+        {
+            int userId = 1;
+
+            _utilizadorService.UpdateUtilizador(userId, dto);
+            return Ok("Perfil atualizado com sucesso.");
+        }
+
+
+    }
+
+    public class UserUpdateDto
+    {
     }
 }

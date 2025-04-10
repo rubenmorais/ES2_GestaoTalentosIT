@@ -263,5 +263,23 @@ namespace WebAPI.Services
             var providedPasswordHash = HashPassword(providedPassword);
             return providedPasswordHash == storedPasswordHash;
         }
+        public UpdateUtilizadorDTO GetUpdateUtilizadorDTO(int id)
+        {
+            var utilizador = _context.Utilizadores.FirstOrDefault(u => u.Utilizadorid == id);
+            if (utilizador == null) return null;
+
+            return new UpdateUtilizadorDTO
+            {
+                Nome = utilizador.Nome,
+                Email = utilizador.Email,
+                Tipoid = utilizador.Tipoid,
+                PalavraPasse = ""
+            };
+        }
+
+
+      
+       
+
     }
 }
