@@ -276,10 +276,5 @@ namespace WebAPI.Services
                 PalavraPasse = ""
             };
         }
-
-
-      
-       
-
     }
 }
