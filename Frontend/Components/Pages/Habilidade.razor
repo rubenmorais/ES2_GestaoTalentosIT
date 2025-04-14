@@ -1,22 +1,37 @@
 ﻿@page "/habilidades"
-@using Frontend.DtoClasses
-@using Frontend.Services
 @rendermode InteractiveServer
-@inject NavigationManager NavManager
+@using Frontend.DtoClasses
+@using Frontend.DTOClasses
+@using Frontend.Services
 @inject HabilidadeService HabilidadeService
+@inject UtilizadorService UtilizadorService
+@inject CategoriaService CategoriaService
 
 <PageTitle>Habilidades</PageTitle>
 
-<h1>Lista de Habilidades</h1>
+<h3>Lista de Habilidades</h3>
 
-<input type="text" @oninput="AtualizarPesquisa" placeholder="Pesquisar Habilidades" class="form-control mb-2" />
+@if (!string.IsNullOrEmpty(_pageSuccessMessage))
+{
+    <div class="alert alert-success">
+        @_pageSuccessMessage
+    </div>
+}
 
+@if (!string.IsNullOrEmpty(_pageErrorMessage))
+{
+    <div class="alert alert-danger">
+        @_pageErrorMessage
+    </div>
+}
+
+<input type="text" @oninput="AtualizarPesquisa" placeholder="Pesquisar habilidades" class="form-control mb-2" />
 
 @if (habilidades == null)
 {
-    <p><em>A Carregar Habilidades...</em></p>
+    <p>A carregar habilidades...</p>
 }
-else if (!habilidades.Any())
+else if (!filteredHabilidades.Any())
 {
     <p>Nenhuma habilidade encontrada.</p>
 }
@@ -26,81 +41,366 @@ else
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Categoria ID</th>
-                <th>Criador ID</th>
+                <th>Categoria</th>
+                <th>Criador</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var hab in habilidades)
+            @foreach (var habilidade in HabilidadesNaPagina)
             {
                 <tr>
-                    <td>@hab.Nome</td>
-                    <td>@hab.Categoriaid</td>
-                    <td>@hab.Criadorid</td>
+                    <td>@habilidade.Nome</td>
+                    <td>@habilidade.CategoriaNome</td>
+                    <td>@habilidade.CriadorNome</td>
                     <td>
-                        <button class="btn btn-warning btn-sm" @onclick="() => Editar(hab.Habilidadeid)">Editar</button>
-                        <button class="btn btn-danger btn-sm" @onclick="() => Apagar(hab.Habilidadeid)">Apagar</button>
+                        @if ((isAdmin) || habilidade.Criadorid == UtilizadorIdLogado)
+                        {
+                            <button class="btn btn-warning" @onclick="() => AbrirModalEdicao(habilidade)">Editar</button>
+                            <button class="btn btn-danger" @onclick="() => ApagarHabilidade(habilidade.Habilidadeid)">Apagar</button>
+                        }
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+
+    <div class="pagination d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-secondary" @onclick="PaginaAnterior" disabled="@(!PodeIrParaPaginaAnterior)">Anterior</button>
+            <span>Página @paginaAtual de @totalPaginas</span>
+            <button class="btn btn-secondary" @onclick="PaginaProxima" disabled="@(!PodeIrParaPaginaProxima)">Próxima</button>
+        </div>
+    </div>
 }
 
-<button class="btn btn-primary" @onclick="CriarNovaHabilidade">Criar Nova Habilidade</button>
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <button class="btn btn-success" @onclick="AbrirModal">Adicionar Habilidade</button>
+</div>
+
+@if (mostrarModal)
+{
+    <div class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@((isEditing ? "Editar Habilidade" : "Adicionar Habilidade"))</h5>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(_modalErrorMessage))
+                    {
+                        <div class="alert alert-danger mt-3" role="alert">
+                            <strong>Erro:</strong> @_modalErrorMessage
+                        </div>
+                    }
+                    <EditForm Model="ModalModel" OnValidSubmit="OnSubmit" OnInvalidSubmit="ExibirErroValidacao">
+                        <DataAnnotationsValidator />
+                        <div class="form-group mt-3">
+                            <label for="Nome">Nome:</label>
+                            <InputText id="Nome" class="form-control" @bind-Value="NomeInput" />
+                            <ValidationMessage For="@(() => novaHabilidade.Nome)" />
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="Categoria">Categoria:</label>
+                            @if (categorias == null || !categorias.Any()) 
+                            {
+                                <p class="text-danger">Não há categorias disponíveis.</p> 
+                            }
+                            <select id="Categoria" class="form-control" @bind="CategoriaInput">
+                                <option value="0">Selecione uma categoria</option>
+                                @foreach (var categoria in categorias)
+                                {
+                                    <option value="@categoria.CategoriaId">@categoria.Categoria</option>
+                                }
+                            </select>
+                            <ValidationMessage For="@(() => novaHabilidade.Categoriaid)" />
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
+                            <button type="submit" class="btn btn-success">@((isEditing ? "Atualizar" : "Guardar"))</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private List<HabilidadeDTO>? habilidades;
+    private List<CategoriaDTO> categorias = new List<CategoriaDTO>();
+    private int? UtilizadorIdLogado;
     private string searchTerm = "";
+    private bool mostrarModal = false;
+    private CreateHabilidadeDTO novaHabilidade = new();
+    private UpdateHabilidadeDTO habilidadeParaEditar = new();
+    private bool isEditing = false;
+    private int habilidadeIdEmEdicao = 0;
+    private string? _modalErrorMessage;
+    private string? _pageErrorMessage;
+    private string? _pageSuccessMessage;
+    private bool isAdmin = false;
+    private object ModalModel => isEditing ? habilidadeParaEditar : novaHabilidade;
 
-    protected override async Task OnInitializedAsync()
+    private string NomeInput
     {
-        await CarregarHabilidades();
+        get => isEditing ? habilidadeParaEditar.Nome : novaHabilidade.Nome;
+        set
+        {
+            if (isEditing)
+                habilidadeParaEditar.Nome = value;
+            else
+                novaHabilidade.Nome = value;
+        }
+    }
+
+    private int CategoriaInput
+    {
+        get => isEditing ? habilidadeParaEditar.Categoriaid : novaHabilidade.Categoriaid;
+        set
+        {
+            if (isEditing)
+                habilidadeParaEditar.Categoriaid = value;
+            else
+                novaHabilidade.Categoriaid = value;
+        }
+    }
+
+    private List<HabilidadeDTO> filteredHabilidades =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? habilidades ?? new List<HabilidadeDTO>()
+            : habilidades?.Where(h =>
+                h.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                h.CriadorNome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                h.CategoriaNome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList() ?? new List<HabilidadeDTO>();
+    
+
+    private List<HabilidadeDTO> HabilidadesNaPagina
+    {
+        get
+        {
+            return filteredHabilidades
+                .Skip((paginaAtual - 1) * itensPorPagina)
+                .Take(itensPorPagina)
+                .ToList();
+        }
+    }
+
+    private int paginaAtual = 1;
+    private int itensPorPagina = 10;
+    private int totalPaginas => (int)Math.Ceiling((double)(filteredHabilidades.Count) / itensPorPagina);
+
+    private bool PodeIrParaPaginaAnterior => paginaAtual > 1;
+    private bool PodeIrParaPaginaProxima => paginaAtual < totalPaginas;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UtilizadorIdLogado = await UtilizadorService.GetUserIdAsync();
+            isAdmin = await UtilizadorService.IsAdminAsync(); 
+            await CarregarHabilidades();
+            await CarregarCategorias();
+        }
     }
 
     private async Task CarregarHabilidades()
     {
         habilidades = await HabilidadeService.GetAllHabilidadesAsync();
+        
+        foreach (var habilidade in habilidades)
+        {
+            var categoria = await CategoriaService.GetCategoriaByIdAsync(habilidade.Categoriaid);
+            habilidade.CategoriaNome = categoria?.Categoria ?? "Categoria desconhecida";
+            
+            var criador = await UtilizadorService.GetUserByIdAsync(habilidade.Criadorid);
+            habilidade.CriadorNome = criador?.Nome ?? "Criador desconhecido";
+        }
+
+        StateHasChanged(); 
     }
-    
+    private async Task CarregarCategorias()
+    {
+        categorias = await CategoriaService.GetAllCategoriasAsync(); 
+    }
+
     private void AtualizarPesquisa(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? "";
         StateHasChanged();
     }
 
-    private void CriarNovaHabilidade()
+    private async Task ApagarHabilidade(int id)
     {
-        // Rota do FRONTEND, não da API
-        NavManager.NavigateTo("/habilidades/create");
-    }
-
-    private void Editar(int id)
-    {
-        NavManager.NavigateTo($"/habilidades/edit/{id}");
-    }
-
-    private async Task Apagar(int id)
-    {
-        if (await ConfirmAsync("Tem certeza que deseja apagar esta habilidade?"))
+        try
         {
             var sucesso = await HabilidadeService.DeleteHabilidadeAsync(id);
+
             if (sucesso)
             {
+                _pageErrorMessage = string.Empty;
+                habilidades?.RemoveAll(h => h.Habilidadeid == id);
+            }
+            else
+            {
+                _pageErrorMessage = "Erro ao apagar habilidade.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _pageErrorMessage = $"{ex.Message}";
+        }
+
+        StateHasChanged();
+    }
+
+    private void AbrirModal()
+    {
+        habilidadeParaEditar = new UpdateHabilidadeDTO();
+        novaHabilidade = new CreateHabilidadeDTO
+        {
+            Categoriaid = 0 
+        };
+        _modalErrorMessage = string.Empty;
+        _pageErrorMessage = string.Empty;
+        mostrarModal = true;
+        isEditing = false;
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        isEditing = false;
+        habilidadeIdEmEdicao = 0;
+        _modalErrorMessage = string.Empty;
+        StateHasChanged();
+    }
+
+    private void ExibirErroValidacao()
+    {
+        _modalErrorMessage = "Todos os campos são obrigatórios.";
+        StateHasChanged();
+    }
+
+    private async Task OnSubmit()
+    {
+        if (isEditing)
+        {
+            await AtualizarHabilidade();
+        }
+        else
+        {
+            await AdicionarHabilidade();
+        }
+    }
+
+    private async Task AdicionarHabilidade()
+    {
+        Console.WriteLine(novaHabilidade);
+        if (string.IsNullOrWhiteSpace(novaHabilidade.Nome) || novaHabilidade.Categoriaid == 0)
+        {
+            _modalErrorMessage = "Todos os campos são obrigatórios.";
+            StateHasChanged();
+            return;
+        }
+        try
+        {
+            if (UtilizadorIdLogado == null)
+            {
+                _modalErrorMessage = "Precisa fazer login antes de criar uma habilidade";
+                return;
+            }
+
+            novaHabilidade.Criadorid = UtilizadorIdLogado.Value;
+            var resultado = await HabilidadeService.CreateHabilidadeAsync(novaHabilidade);
+
+            if (resultado != null)
+            {
+                _modalErrorMessage = resultado;
+            }
+            else
+            {
+                _modalErrorMessage = string.Empty;
+                _pageSuccessMessage = "Habilidade adicionada com sucesso.";
+                mostrarModal = false;
+                await CarregarHabilidades();
+            }
+        }
+        catch (Exception ex)
+        {
+            _modalErrorMessage = $"{ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private void AbrirModalEdicao(HabilidadeDTO habilidade)
+    {
+        isEditing = true;
+        habilidadeIdEmEdicao = habilidade.Habilidadeid;
+
+        habilidadeParaEditar = new UpdateHabilidadeDTO
+        {
+            Habilidadeid = habilidade.Habilidadeid,
+            Nome = habilidade.Nome,
+            Categoriaid = habilidade.Categoriaid,
+        };
+
+        _modalErrorMessage = string.Empty;
+        mostrarModal = true;
+    }
+
+    private async Task AtualizarHabilidade()
+    {
+        if (string.IsNullOrWhiteSpace(habilidadeParaEditar.Nome) || habilidadeParaEditar.Categoriaid == 0)
+        {
+            _modalErrorMessage = "Todos os campos são obrigatórios.";
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            bool sucesso = await HabilidadeService.UpdateHabilidadeAsync(habilidadeParaEditar);
+
+            if (sucesso)
+            {
+                _modalErrorMessage = string.Empty;
+                _pageSuccessMessage = "Habilidade atualizada com sucesso.";
+                mostrarModal = false;
+                StateHasChanged();
                 await CarregarHabilidades();
             }
             else
             {
-                await AlertAsync("Erro ao apagar a habilidade.");
+                _modalErrorMessage = "Erro ao atualizar habilidade.";
             }
+        }
+        catch (Exception ex)
+        {
+            _modalErrorMessage = $"{ex.Message}";
+        }
+        StateHasChanged();
+    }
+
+    private void PaginaAnterior()
+    {
+        if (paginaAtual > 1)
+        {
+            paginaAtual--;
+            StateHasChanged();
         }
     }
 
-    private Task<bool> ConfirmAsync(string message) => Task.FromResult(true);
-    private Task AlertAsync(string message)
+    private void PaginaProxima()
     {
-        Console.WriteLine(message);
-        return Task.CompletedTask;
+        if (paginaAtual < totalPaginas)
+        {
+            paginaAtual++;
+            StateHasChanged();
+        }
     }
 }
+

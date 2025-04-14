@@ -5,6 +5,7 @@
 @using UpdateUtilizadorAdminDTO = Frontend.DTOClasses.UpdateUtilizadorAdminDTO
 @using UtilizadorDTO = Frontend.DTOClasses.UtilizadorDTO
 @inject UtilizadorService UtilizadorService
+@inject NavigationManager Navigation
 
 <PageTitle>Utilizadores</PageTitle>
 
@@ -182,6 +183,10 @@ else
         {
             UtilizadorIdLogado = await UtilizadorService.GetUserIdAsync();
             isAdmin = await UtilizadorService.IsAdminAsync();
+            if (!isAdmin)
+            {
+                Navigation.NavigateTo("/talentos");
+            }
             await CarregarUtilizadores();
         }
     }

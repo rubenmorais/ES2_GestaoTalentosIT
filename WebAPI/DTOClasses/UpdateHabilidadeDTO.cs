@@ -2,7 +2,6 @@
 
 namespace WebAPI.DTOClasses
 {
-
     public class UpdateHabilidadeDTO
     {
         [Required, MaxLength(50)] 
@@ -10,8 +9,5 @@ namespace WebAPI.DTOClasses
         
         [Required] 
         public int Categoriaid { get; set; }
-        
-        [Required] 
-        public int Criadorid { get; set; }
     }
 }    

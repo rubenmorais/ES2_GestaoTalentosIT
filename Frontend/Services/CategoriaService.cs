@@ -59,7 +59,7 @@ namespace Frontend.Services
                 return null;
             }
 
-            return $"Erro ao criar categoria: {response.StatusCode} - {responseContent}";
+            return $"{responseContent}";
         }
 
 

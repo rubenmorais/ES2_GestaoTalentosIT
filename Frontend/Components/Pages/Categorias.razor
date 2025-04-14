@@ -4,6 +4,9 @@
 @using Frontend.DTOClasses
 @using Frontend.Services
 @inject CategoriaService CategoriaService
+@inject UtilizadorService UtilizadorService
+@inject NavigationManager Navigation
+
 
 <PageTitle>Categorias</PageTitle>
 
@@ -41,8 +44,11 @@ else
                 <tr>
                     <td>@categoria.Categoria</td>
                     <td>
-                        <button class="btn btn-warning" @onclick="() => AbrirModalEdicao(categoria)">Editar</button>
-                        <button class="btn btn-danger" @onclick="() => ApagarCategoria(categoria.CategoriaId)">Apagar</button>
+                        @if ((isAdmin))
+                        {
+                            <button class="btn btn-warning" @onclick="() => AbrirModalEdicao(categoria)">Editar</button>
+                            <button class="btn btn-danger" @onclick="() => ApagarCategoria(categoria.CategoriaId)">Apagar</button>
+                        }
                     </td>
                 </tr>
             }
@@ -109,6 +115,7 @@ else
     private string? modalErrorMessage;
     private string? pageErrorMessage;
     private string? registrationSuccessMessage;
+    private bool isAdmin = false;
     private object ModalModel => isEditing ? categoriaParaEditar : novaCategoria;
 
     private string CategoriaInput
@@ -152,6 +159,11 @@ else
     {
         if (firstRender)
         {
+            isAdmin = await UtilizadorService.IsAdminAsync();
+            if (!isAdmin)
+            {
+                Navigation.NavigateTo("/talentos");
+            }
             await CarregarCategorias();
         }
     }

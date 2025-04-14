@@ -47,6 +47,18 @@ namespace WebAPI.Services
             {
                 throw new ArgumentException("Nome da habilidade é obrigatório.", nameof(dto.Nome));
             }
+            
+            var categoriaExiste = await _context.CategoriasProfissionais.AnyAsync(c => c.Categoriaid == dto.Categoriaid);
+            if (!categoriaExiste)
+            {
+                throw new ArgumentException("Categoria não encontrada.");
+            }
+
+            var criadorExiste = await _context.Utilizadores.AnyAsync(u => u.Utilizadorid == dto.Criadorid);
+            if (!criadorExiste)
+            {
+                throw new ArgumentException("Criador não encontrado.");
+            }
 
             var habilidade = new Habilidade
             {
@@ -57,8 +69,7 @@ namespace WebAPI.Services
 
             _context.Habilidades.Add(habilidade);
             await _context.SaveChangesAsync();
-
-            // Retorna um DTO contendo o ID gerado e os dados salvos
+            
             return new HabilidadeDTO
             {
                 Habilidadeid = habilidade.Habilidadeid,
@@ -70,14 +81,22 @@ namespace WebAPI.Services
 
         public async Task<bool> UpdateAsync(int id, UpdateHabilidadeDTO dto)
         {
+            
             var habilidade = await _context.Habilidades.FindAsync(id);
             if (habilidade == null)
                 return false;
-
-            // Atualiza os dados da habilidade
+            
+            var categoriaExiste = await _context.CategoriasProfissionais.AnyAsync(c => c.Categoriaid == dto.Categoriaid);
+            if (!categoriaExiste)
+            {
+                throw new ArgumentException("Categoria não encontrada.");
+            }          
+        
+            var criadorIdOriginal = habilidade.Criadorid;
+            
             habilidade.Nome = dto.Nome;
             habilidade.Categoriaid = dto.Categoriaid;
-            habilidade.Criadorid = dto.Criadorid;
+            habilidade.Criadorid = criadorIdOriginal;  
 
             _context.Entry(habilidade).State = EntityState.Modified;
 
@@ -94,6 +113,7 @@ namespace WebAPI.Services
             }
         }
 
+
         public async Task<bool> DeleteAsync(int id)
         {
             var habilidade = await _context.Habilidades
@@ -102,8 +122,7 @@ namespace WebAPI.Services
 
             if (habilidade == null)
                 return false;
-
-            // Exemplo: Não apagar se existir relacionamento
+            
             if (habilidade.TalentosHabilidades.Any())
                 return false;
 
