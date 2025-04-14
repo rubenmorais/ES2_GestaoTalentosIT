@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using DbLayer.Context;
+using WebAPI.Interfaces;
+using WebAPI.Repositories;
 using WebAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +17,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
+builder.Services.AddScoped<ITalentoRepository, TalentoRepository>();
+builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TalentoService>();
