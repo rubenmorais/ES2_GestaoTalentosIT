@@ -116,6 +116,14 @@ else
                             </InputSelect>
                             <ValidationMessage For="@(() => novoUtilizador.Tipoid)" />
                         </div>
+                        @if (!isEditing)
+                        {
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="Password">Palavra-passe:</label>
+                            <InputText id="Password" type="password" class="form-control" @bind-Value="novoUtilizador.PalavraPasse" />
+                            <ValidationMessage For="@(() => novoUtilizador.PalavraPasse)" />
+                        </div>
+                        }
                     </EditForm>
                 </div>
                 <div class="modal-footer">
@@ -247,25 +255,38 @@ else
 
     private async Task AdicionarUtilizador()
     {
+        modalErrorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(novoUtilizador.Nome) ||
+            string.IsNullOrWhiteSpace(novoUtilizador.Email) ||
+            string.IsNullOrWhiteSpace(novoUtilizador.PalavraPasse) ||
+            novoUtilizador.Tipoid <= 0)
+        {
+            modalErrorMessage = "Todos os campos são obrigatórios.";
+            return;
+        }
+
         try
         {
             var resultado = await UtilizadorService.CreateUtilizadorAsync(novoUtilizador);
-            if (resultado != null)
+        
+            if (string.IsNullOrEmpty(resultado))
             {
                 mostrarModal = false;
                 await CarregarUtilizadores();
             }
             else
             {
-                modalErrorMessage = "Erro ao adicionar utilizador.";  // Mensagem de erro do modal
+                modalErrorMessage = resultado;
             }
         }
         catch (Exception ex)
         {
-            modalErrorMessage = $"Erro ao adicionar utilizador: {ex.Message}";  // Mensagem de erro do modal
-            StateHasChanged();
+            modalErrorMessage = $"Erro ao adicionar utilizador: {ex.Message}";
         }
     }
+
+
 
     private void AbrirModalEdicao(UtilizadorDTO utilizador)
     {
