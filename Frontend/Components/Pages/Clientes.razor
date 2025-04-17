@@ -1,0 +1,457 @@
+@page "/clientes"
+@using Frontend.DtoClasses
+@using Frontend.DTOClasses
+@rendermode InteractiveServer
+@using Frontend.Services
+@inject ClienteService ClienteService
+@inject UtilizadorService UtilizadorService  
+
+<PageTitle>Clientes</PageTitle>
+
+<h1>Lista de Clientes</h1>
+
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success">
+        @mensagemSucesso
+    </div>
+}
+
+<input type="text" @oninput="AtualizarPesquisa" 
+       placeholder="@(isAdmin ? "Pesquisar por nome, email ou criador" : "Pesquisar por nome ou email")" 
+       class="form-control mb-2" />
+
+@if ((isAdmin && (clientes == null || utilizadores == null)) || (!isAdmin && clientes == null))
+{
+    <p>A carregar clientes...</p>
+}
+else if (filteredClientes.Count == 0)
+{
+    <p>Nenhum cliente encontrado.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            @if (isAdmin)
+            {
+                <th>Criado por</th>
+            }
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var cliente in ClientesNaPagina)
+        {
+            <tr>
+                <td>@cliente.Nome</td>
+                <td>@cliente.Email</td>
+                @if (isAdmin)
+                {
+                    <td>@GetUtilizadorNome(cliente.UtilizadorId)</td>
+                }
+                <td>
+                    @if ((isAdmin) || cliente.UtilizadorId == UtilizadorIdLogado)
+                    {
+                        <button class="btn btn-warning" style="margin-right: 10px" @onclick="() => AbrirModalEdicao(cliente)">Editar</button>
+                        <button class="btn btn-danger" @onclick="() => ApagarCliente(cliente.ClienteId)">Apagar</button>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    
+    <div class="pagination d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-secondary" style="margin-left: 10px;" @onclick="PaginaAnterior" disabled="@(!PodeIrParaPaginaAnterior)">Anterior</button>
+            <span>Página @paginaAtual de @totalPaginas</span>
+            <button class="btn btn-secondary" style="margin-right: 10px;" @onclick="PaginaProxima" disabled="@(!PodeIrParaPaginaProxima)">Próxima</button>
+        </div>
+    </div>
+}
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <button class="btn btn-success" @onclick="AbrirModal">Adicionar Cliente</button>
+</div>
+
+@if (mostrarModal)
+{
+    <div class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@((isEditing ? "Editar Cliente" : "Adicionar Cliente"))</h5>
+                </div>
+                <div class="modal-body">
+                    @if (registrationFailed)
+                    {
+                        <div class="alert alert-danger mt-3" role="alert">
+                            <strong>Erro:</strong> @registrationErrorMessage
+                        </div>
+                    }
+                    <EditForm Model="novoCliente" OnValidSubmit="AdicionarCliente" OnInvalidSubmit="ExibirErroValidacao">
+                        <DataAnnotationsValidator />
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="Nome">Nome:</label>
+                            <InputText id="Nome" class="form-control" @bind-Value="novoCliente.Nome" />
+                            <ValidationMessage For="@(() => novoCliente.Nome)" />
+                        </div>
+
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="Email">Email:</label>
+                            <InputText id="Email" class="form-control" @bind-Value="novoCliente.Email" />
+                            <ValidationMessage For="@(() => novoCliente.Email)" />
+                        </div>
+
+                        @if (isAdmin && !isEditing)
+                        {
+                            <div class="form-group" style="margin-top: 10px">
+                                <label for="UtilizadorId">Criador:</label>
+                                <InputSelect id="UtilizadorId" class="form-control" @bind-Value="novoCliente.UtilizadorId">
+                                    @foreach (var utilizador in utilizadores)
+                                    {
+                                        <option value="@utilizador.Utilizadorid">@utilizador.Nome</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        }
+                    </EditForm>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success" @onclick="OnSubmit">@((isEditing ? "Atualizar" : "Guardar"))</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ClienteDTO>? clientes;
+    private List<UtilizadorDTO>? utilizadores;
+    private string searchTerm = "";
+    private bool mostrarModal = false;
+    private CreateClienteDTO novoCliente = new();
+    private int? UtilizadorIdLogado;
+    private string? erroMensagem;
+    private bool registrationFailed = false;
+    private string registrationErrorMessage = "";
+    private bool isAdmin = false;
+    private int paginaAtual = 1;
+    private int itensPorPagina = 10;
+    private int totalPaginas => (int)Math.Ceiling((double)(filteredClientes.Count) / itensPorPagina);
+    private bool isEditing = false;
+    private int clienteIdEmEdicao = 0;
+    private bool mostrarMensagemSucesso = false;
+    private string mensagemSucesso = "";
+    private System.Timers.Timer timerMensagem;
+    
+    private List<ClienteDTO> filteredClientes =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? clientes?.Where(c => isAdmin || c.UtilizadorId == UtilizadorIdLogado).ToList() ?? new List<ClienteDTO>()
+            : clientes?.Where(c => 
+                (isAdmin || c.UtilizadorId == UtilizadorIdLogado) && 
+                (c.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                 c.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                 (isAdmin && utilizadores != null && 
+                  utilizadores.Any(u => u.Utilizadorid == c.UtilizadorId && 
+                                        u.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                )
+            ).ToList() ?? new List<ClienteDTO>();
+
+    private List<ClienteDTO> ClientesNaPagina
+    {
+        get
+        {
+            return filteredClientes
+                .Skip((paginaAtual - 1) * itensPorPagina)
+                .Take(itensPorPagina)
+                .ToList();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UtilizadorIdLogado = await UtilizadorService.GetUserIdAsync();
+            isAdmin = await UtilizadorService.IsAdminAsync(); 
+            await CarregarDados();
+        }
+    }
+
+    private async Task CarregarDados()
+    {
+        clientes = await ClienteService.GetAllClientesAsync();
+        
+        if (isAdmin)
+        {
+            utilizadores = await UtilizadorService.GetAllUsersAsync();
+        }
+        
+        StateHasChanged();
+    }
+
+    private string GetUtilizadorNome(int utilizadorId)
+    {
+        var utilizador = utilizadores?.FirstOrDefault(u => u.Utilizadorid == utilizadorId);
+        return utilizador != null ? utilizador.Nome : "Desconhecido";
+    }
+
+    private void AtualizarPesquisa(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+    
+    private async Task ApagarCliente(int id)
+    {
+        var sucesso = await ClienteService.DeleteClienteAsync(id);
+        if (sucesso)
+        {
+            Console.WriteLine("Cliente apagado com sucesso!");
+            clientes?.RemoveAll(c => c.ClienteId == id);
+            ExibirMensagemSucesso("Cliente apagado com sucesso!");
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Erro ao apagar cliente.");
+        }
+    }
+
+    private void AbrirModal()
+    {
+        novoCliente = new CreateClienteDTO();
+        
+        if (!isAdmin)
+        {
+            novoCliente.UtilizadorId = UtilizadorIdLogado ?? 0;
+        }
+        else if (utilizadores != null && utilizadores.Any())
+        {
+            novoCliente.UtilizadorId = UtilizadorIdLogado ?? utilizadores.First().Utilizadorid;
+        }
+        
+        mostrarModal = true;
+        registrationFailed = false; 
+        registrationErrorMessage = ""; 
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        isEditing = false;
+        clienteIdEmEdicao = 0;
+    }
+    
+    private void ExibirErroValidacao()
+    {
+        registrationErrorMessage = "Existem erros no formulário. Por favor, corrija e tente novamente.";
+        registrationFailed = true;
+        StateHasChanged();
+    }
+    
+    private async Task OnSubmit()
+    {
+        if (isEditing)
+        {
+            await AtualizarCliente();
+        }
+        else
+        {
+            await AdicionarCliente();
+        }
+    }
+
+    private async Task AdicionarCliente()
+    {
+        if (string.IsNullOrWhiteSpace(novoCliente.Nome) ||
+            string.IsNullOrWhiteSpace(novoCliente.Email))
+        {
+            registrationErrorMessage = "Todos os campos são obrigatórios.";
+            registrationFailed = true;
+            StateHasChanged();
+            return;
+        }
+        
+        if (!IsValidEmail(novoCliente.Email))
+        {
+            registrationErrorMessage = "Por favor, insira um endereço de email válido.";
+            registrationFailed = true;
+            StateHasChanged();
+            return;
+        }
+        
+        if (!isAdmin && UtilizadorIdLogado.HasValue)
+        {
+            novoCliente.UtilizadorId = UtilizadorIdLogado.Value;
+        }
+
+        try
+        {
+            var resultado = await ClienteService.CreateClienteAsync(novoCliente);
+            if (resultado == null)
+            {
+                mostrarModal = false;
+                await CarregarDados();
+                ExibirMensagemSucesso("Cliente adicionado com sucesso!");
+            }
+            else
+            {
+                if (resultado.Contains("email") || resultado.Contains("e-mail") || resultado.Contains("Email"))
+                {
+                    registrationErrorMessage = "O endereço de email fornecido é inválido. Por favor, verifique e tente novamente.";
+                    registrationFailed = true;
+                }
+                else
+                {
+                    registrationErrorMessage = resultado;
+                    registrationFailed = true;
+                }
+                StateHasChanged();  
+            }
+        }
+        catch (Exception ex)
+        {
+            registrationErrorMessage = $"Erro ao adicionar cliente: {ex.Message}";
+            registrationFailed = true;
+            StateHasChanged();  
+        }
+    }
+
+    private bool PodeIrParaPaginaAnterior => paginaAtual > 1;
+    private bool PodeIrParaPaginaProxima => paginaAtual < totalPaginas;
+
+    private void PaginaAnterior()
+    {
+        if (paginaAtual > 1)
+        {
+            paginaAtual--;
+            StateHasChanged();
+        }
+    }
+
+    private void PaginaProxima()
+    {
+        if (paginaAtual < totalPaginas)
+        {
+            paginaAtual++;
+            StateHasChanged();
+        }
+    }
+    
+    private void AbrirModalEdicao(ClienteDTO cliente)
+    {
+        isEditing = true;
+        clienteIdEmEdicao = cliente.ClienteId;
+
+        novoCliente = new CreateClienteDTO
+        {
+            Nome = cliente.Nome,
+            Email = cliente.Email,
+            UtilizadorId = cliente.UtilizadorId
+        };
+
+        registrationFailed = false;
+        registrationErrorMessage = "";
+        mostrarModal = true;
+    }
+    
+    private async Task AtualizarCliente()
+    {
+        if (string.IsNullOrWhiteSpace(novoCliente.Nome) ||
+            string.IsNullOrWhiteSpace(novoCliente.Email))
+        {
+            registrationErrorMessage = "Todos os campos são obrigatórios.";
+            registrationFailed = true;
+            StateHasChanged();
+            return;
+        }
+
+        if (!IsValidEmail(novoCliente.Email))
+        {
+            registrationErrorMessage = "Por favor, insira um endereço de email válido.";
+            registrationFailed = true;
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var clienteAtualizado = new UpdateClienteDTO
+            {
+                Nome = novoCliente.Nome,
+                Email = novoCliente.Email,
+            };
+
+            var resultado = await ClienteService.UpdateClienteAsync(clienteIdEmEdicao, clienteAtualizado);
+
+            if (resultado)
+            {
+                mostrarModal = false;
+                isEditing = false;
+                await CarregarDados();
+                ExibirMensagemSucesso("Cliente atualizado com sucesso!");
+            }
+            else
+            {
+                registrationErrorMessage = "Erro ao atualizar cliente. Verifique se o email é válido";
+                registrationFailed = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (ex.Message.Contains("email", StringComparison.OrdinalIgnoreCase) || 
+                ex.Message.Contains("e-mail", StringComparison.OrdinalIgnoreCase))
+            {
+                registrationErrorMessage = "O endereço de email fornecido é inválido.";
+            }
+            else
+            {
+                registrationErrorMessage = ex.Message;
+            }
+        
+            registrationFailed = true;
+            StateHasChanged();
+        }
+    }
+    
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    private void ExibirMensagemSucesso(string mensagem)
+    {
+        mensagemSucesso = mensagem;
+        StateHasChanged(); 
+        
+        if (timerMensagem != null)
+        {
+            timerMensagem.Dispose();
+        }
+    
+        timerMensagem = new System.Timers.Timer(5000);
+        timerMensagem.Elapsed += (sender, e) => 
+        {
+            mensagemSucesso = string.Empty; 
+            InvokeAsync(StateHasChanged); 
+        };
+        timerMensagem.AutoReset = false;
+        timerMensagem.Start();
+    }
+}
