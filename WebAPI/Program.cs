@@ -20,6 +20,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ITalentoRepository, TalentoRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+builder.Services.AddScoped<ITalentoHabilidadeRepository, TalentoHabilidadeRepository>();
 builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TalentoService>();
@@ -27,6 +28,7 @@ builder.Services.AddScoped<ExperienciaService>();
 builder.Services.AddScoped<HabilidadeService>();
 builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddScoped<ClienteService>();
+builder.Services.AddScoped<TalentoHabilidadeService>();
 
 
 

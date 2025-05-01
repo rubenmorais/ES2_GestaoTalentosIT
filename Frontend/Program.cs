@@ -23,6 +23,7 @@ builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddScoped<HabilidadeService>();
 builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddScoped<ClienteService>();
+builder.Services.AddScoped<TalentoHabilidadeService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient<AuthService>(client =>
@@ -41,6 +42,10 @@ builder.Services.AddHttpClient<TalentoService>(client =>
 });
 
 builder.Services.AddHttpClient<HabilidadeService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7070/");
+});
+builder.Services.AddHttpClient<TalentoHabilidadeService>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7070/");
 });
