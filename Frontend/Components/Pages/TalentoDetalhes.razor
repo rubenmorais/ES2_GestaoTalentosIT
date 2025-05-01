@@ -2,6 +2,7 @@
 @using Frontend.DTOClasses
 @rendermode InteractiveServer
 @using Frontend.Services
+@inject UtilizadorService UtilizadorService
 @inject TalentoService TalentoService
 @inject ExperienciaService ExperienciaService
 
@@ -37,8 +38,10 @@ else
             }
         </ul>
     }
-
-    <button class="btn btn-success mt-3" @onclick="() => mostrarFormulario = true">Criar Experiência</button>
+    @if (!isLoading && (isAdmin || talento.UtilizadorId == UtilizadorIdLogado))
+    {
+        <button class="btn btn-success mt-3" @onclick="() => mostrarFormulario = true">Criar Experiência</button>
+    }
 
     @if (mostrarFormulario)
     {
@@ -100,11 +103,25 @@ else
     private TalentoDTO? talento;
     private List<ExperienciaDTO> experiencias = new();
     private string? validacaoMensagem;
+    private bool isAdmin = false;
+    private int? UtilizadorIdLogado;
+    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
         talento = await TalentoService.GetTalentoByIdAsync(TalentoId);
         experiencias = await ExperienciaService.GetExperienciasByTalentoIdAsync(TalentoId);
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UtilizadorIdLogado = await UtilizadorService.GetUserIdAsync();
+            isAdmin = await UtilizadorService.IsAdminAsync(); 
+            isLoading = false;  
+            StateHasChanged();
+        }
     }
 
     private string CalcularDuracao(ExperienciaDTO exp)
