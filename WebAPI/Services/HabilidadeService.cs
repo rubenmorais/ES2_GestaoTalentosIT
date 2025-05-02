@@ -1,139 +1,45 @@
-﻿using Microsoft.EntityFrameworkCore;
-using DbLayer.Context;
-using DbLayer.Models;
-using WebAPI.DTOClasses;
+﻿using WebAPI.DTOClasses;
+using WebAPI.Interfaces;
 
 namespace WebAPI.Services
 {
-    public class HabilidadeService 
+    public class HabilidadeService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IHabilidadeRepository _habilidadeRepository;
 
-        public HabilidadeService(ApplicationDbContext context)
+        public HabilidadeService(IHabilidadeRepository habilidadeRepository)
         {
-            _context = context;
+            _habilidadeRepository = habilidadeRepository ?? throw new ArgumentNullException(nameof(habilidadeRepository));
         }
 
         public async Task<IEnumerable<HabilidadeDTO>> GetAllAsync()
         {
-            var habilidades = await _context.Habilidades.ToListAsync();
-            return habilidades.Select(h => new HabilidadeDTO
-            {
-                Habilidadeid = h.Habilidadeid,
-                Nome = h.Nome,
-                Categoriaid = h.Categoriaid,
-                Criadorid = h.Criadorid
-            });
+            return await _habilidadeRepository.GetAllAsync();
         }
 
         public async Task<HabilidadeDTO?> GetByIdAsync(int id)
         {
-            var habilidade = await _context.Habilidades.FirstOrDefaultAsync(h => h.Habilidadeid == id);
-            if (habilidade is null)
-                return null;
-
-            return new HabilidadeDTO
-            {
-                Habilidadeid = habilidade.Habilidadeid,
-                Nome = habilidade.Nome,
-                Categoriaid = habilidade.Categoriaid,
-                Criadorid = habilidade.Criadorid
-            };
+            return await _habilidadeRepository.GetByIdAsync(id);
         }
 
         public async Task<HabilidadeDTO> CreateAsync(CreateHabilidadeDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Nome))
-            {
-                throw new ArgumentException("Nome da habilidade é obrigatório.", nameof(dto.Nome));
-            }
-            
-            var categoriaExiste = await _context.CategoriasProfissionais.AnyAsync(c => c.Categoriaid == dto.Categoriaid);
-            if (!categoriaExiste)
-            {
-                throw new ArgumentException("Categoria não encontrada.");
-            }
-
-            var criadorExiste = await _context.Utilizadores.AnyAsync(u => u.Utilizadorid == dto.Criadorid);
-            if (!criadorExiste)
-            {
-                throw new ArgumentException("Criador não encontrado.");
-            }
-
-            var habilidade = new Habilidade
-            {
-                Nome = dto.Nome,
-                Categoriaid = dto.Categoriaid,
-                Criadorid = dto.Criadorid
-            };
-
-            _context.Habilidades.Add(habilidade);
-            await _context.SaveChangesAsync();
-            
-            return new HabilidadeDTO
-            {
-                Habilidadeid = habilidade.Habilidadeid,
-                Nome = habilidade.Nome,
-                Categoriaid = habilidade.Categoriaid,
-                Criadorid = habilidade.Criadorid
-            };
+            return await _habilidadeRepository.CreateAsync(dto);
         }
 
         public async Task<bool> UpdateAsync(int id, UpdateHabilidadeDTO dto)
         {
-            
-            var habilidade = await _context.Habilidades.FindAsync(id);
-            if (habilidade == null)
-                return false;
-            
-            var categoriaExiste = await _context.CategoriasProfissionais.AnyAsync(c => c.Categoriaid == dto.Categoriaid);
-            if (!categoriaExiste)
-            {
-                throw new ArgumentException("Categoria não encontrada.");
-            }          
-        
-            var criadorIdOriginal = habilidade.Criadorid;
-            
-            habilidade.Nome = dto.Nome;
-            habilidade.Categoriaid = dto.Categoriaid;
-            habilidade.Criadorid = criadorIdOriginal;  
-
-            _context.Entry(habilidade).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await HabilidadeExistsAsync(id))
-                    return false;
-                throw;
-            }
+            return await _habilidadeRepository.UpdateAsync(id, dto);
         }
-
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var habilidade = await _context.Habilidades
-                .Include(h => h.TalentosHabilidades)
-                .FirstOrDefaultAsync(h => h.Habilidadeid == id);
-
-            if (habilidade == null)
-                return false;
-            
-            if (habilidade.TalentosHabilidades.Any())
-                return false;
-
-            _context.Habilidades.Remove(habilidade);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _habilidadeRepository.DeleteAsync(id);
         }
 
-        private async Task<bool> HabilidadeExistsAsync(int id)
+        public async Task<bool> HabilidadeExistsAsync(int id)
         {
-            return await _context.Habilidades.AnyAsync(h => h.Habilidadeid == id);
+            return await _habilidadeRepository.HabilidadeExistsAsync(id);
         }
     }
 }

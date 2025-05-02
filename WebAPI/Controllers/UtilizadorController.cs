@@ -136,25 +136,5 @@ namespace WebAPI.Controllers
                 return BadRequest($"Erro ao verificar se o utilizador é admin: {ex.Message}");
             }
         }
-        
-        // Método para obter o perfil (não possui rota HTTP definida, se precisar, adicione um [HttpGet])
-        [HttpGet("perfil")]
-        public ActionResult<UpdateUtilizadorDTO> GetPerfil()
-        {
-            int userId = 1;
-            var utilizadorDTO = _utilizadorService.GetUpdateUtilizadorDTO(userId);
-            if (utilizadorDTO == null)
-                return NotFound("Utilizador não encontrado.");
-            return Ok(utilizadorDTO);
-        }
-
-        [HttpPut("perfil")]
-        [Authorize]
-        public IActionResult AtualizarPerfil([FromBody] UpdateUtilizadorDTO dto)
-        {
-            int userId = 1;
-            _utilizadorService.UpdateUtilizador(userId, dto);
-            return Ok("Perfil atualizado com sucesso.");
-        }
     }
 }
