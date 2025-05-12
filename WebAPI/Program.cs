@@ -25,6 +25,7 @@ builder.Services.AddScoped<IExperienciaRepository, ExperienciaRepository>();
 builder.Services.AddScoped<IUtilizadorRepository, UtilizadorRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IHabilidadeRepository, HabilidadeRepository>();
+builder.Services.AddScoped<IPropostaTrabalhoRepository, PropostaTrabalhoRepository>();
 builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TalentoService>();
@@ -33,6 +34,7 @@ builder.Services.AddScoped<HabilidadeService>();
 builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<TalentoHabilidadeService>();
+builder.Services.AddScoped<PropostaTrabalhoService>();
 
 
 
