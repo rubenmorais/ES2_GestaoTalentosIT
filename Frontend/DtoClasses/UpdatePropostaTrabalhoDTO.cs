@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebAPI.DTOClasses
+namespace Frontend.DTOClasses
 {
     public class UpdatePropostaTrabalhoDTO
     {
@@ -21,3 +21,4 @@ namespace WebAPI.DTOClasses
         public string Descricao { get; set; }
     }
 }
+

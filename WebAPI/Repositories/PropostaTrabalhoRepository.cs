@@ -108,6 +108,7 @@ namespace WebAPI.Repositories
             
             proposta.Nome = dto.Nome;
             proposta.Categoriaid = dto.CategoriaId;
+            proposta.Clienteid = dto.ClienteId;
             proposta.TotalHoras = dto.TotalHoras;
             proposta.Descricao = dto.Descricao;
 

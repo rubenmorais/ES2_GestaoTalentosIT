@@ -1,0 +1,420 @@
+@page "/propostas-trabalho"
+@using Frontend.DtoClasses
+@using Frontend.DTOClasses
+@using Frontend.Services
+@rendermode InteractiveServer
+@inject PropostaTrabalhoService PropostaService
+@inject UtilizadorService UtilizadorService
+@inject ClienteService ClienteService
+@inject CategoriaService CategoriaService
+@inject NavigationManager Navigation
+
+<PageTitle>Propostas de Trabalho</PageTitle>
+
+<h1>Propostas de Trabalho</h1>
+
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success">
+        @mensagemSucesso
+    </div>
+}
+
+<input type="text" @oninput="AtualizarPesquisa" placeholder="Pesquisar por nome ou cliente" class="form-control mb-2" />
+
+@if (propostas == null || clientes == null || categorias == null)
+{
+    <p>A carregar propostas de trabalho...</p>
+}
+else if (filteredPropostas.Count == 0)
+{
+    <p>Nenhuma proposta encontrada.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Categoria</th>
+            <th>Cliente</th>
+            <th>Total de Horas</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var proposta in PropostasNaPagina)
+        {
+            <tr>
+                <td>@proposta.Nome</td>
+                <td>@proposta.NomeCategoria</td>
+                <td>@GetClienteNome(proposta.ClienteId)</td>
+                <td>@proposta.TotalHoras</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => IrParaDetalhes(proposta.PropostaId)">Detalhes</button>
+                    <button class="btn btn-warning" @onclick="() => AbrirModalEdicao(proposta)">Editar</button>
+                    <button class="btn btn-danger" @onclick="() => ApagarProposta(proposta.PropostaId)">Apagar</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+    <div class="pagination d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-secondary" @onclick="PaginaAnterior" disabled="@(!PodeIrParaPaginaAnterior)">Anterior</button>
+            <span>Página @paginaAtual de @totalPaginas</span>
+            <button class="btn btn-secondary" @onclick="PaginaProxima" disabled="@(!PodeIrParaPaginaProxima)">Próxima</button>
+        </div>
+    </div>
+
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <button class="btn btn-success" @onclick="AbrirModal">Adicionar Proposta</button>
+</div>
+
+@if (mostrarModal)
+{
+   <div class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@((isEditing ? "Editar Proposta" : "Adicionar Proposta"))</h5>
+                </div>
+                <div class="modal-body">
+                    @if (registrationFailed)
+                    {
+                        <div class="alert alert-danger mt-3" role="alert">
+                            <strong>Erro:</strong> @registrationErrorMessage
+                        </div>
+                    }
+                    <EditForm Model="novaProposta" OnValidSubmit="OnSubmit" OnInvalidSubmit="ExibirErroValidacao">
+                        <DataAnnotationsValidator />
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="Nome">Nome:</label>
+                            <InputText id="Nome" class="form-control" @bind-Value="novaProposta.Nome" />
+                            <ValidationMessage For="@(() => novaProposta.Nome)" />
+                        </div>
+
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="CategoriaId">Categoria:</label>
+                            <InputSelect id="CategoriaId" class="form-control" @bind-Value="novaProposta.CategoriaId">
+                                @foreach (var categoria in categorias)
+                                {
+                                    <option value="@categoria.CategoriaId">@categoria.Categoria</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => novaProposta.CategoriaId)" />
+                        </div>
+
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="ClienteId">Cliente:</label>
+                            <InputSelect id="ClienteId" class="form-control" @bind-Value="novaProposta.ClienteId">
+                                @foreach (var cliente in clientes)
+                                {
+                                    <option value="@cliente.ClienteId">@cliente.Nome</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => novaProposta.ClienteId)" />
+                        </div>
+
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="TotalHoras">Total de Horas:</label>
+                            <InputNumber id="TotalHoras" class="form-control" @bind-Value="novaProposta.TotalHoras" min="1" max="50" />
+                            <ValidationMessage For="@(() => novaProposta.TotalHoras)" />
+                        </div>
+
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="Descricao">Descrição:</label>
+                            <InputTextArea id="Descricao" class="form-control" @bind-Value="novaProposta.Descricao" />
+                            <ValidationMessage For="@(() => novaProposta.Descricao)" />
+                        </div>
+                    </EditForm>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="FecharModal">Fechar</button>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success" @onclick="OnSubmit">@((isEditing ? "Atualizar" : "Guardar"))</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    private List<PropostaTrabalhoDTO>? propostas;
+    private List<ClienteDTO>? clientes;
+    private List<CategoriaDTO>? categorias;
+    private string searchTerm = "";
+
+    private bool mostrarModal = false;
+    private CreatePropostaTrabalhoDTO novaProposta = new();
+    private int? UtilizadorIdLogado;
+    private string? erroMensagem;
+    private bool registrationFailed = false;
+    private string registrationErrorMessage = "";
+    private bool isAdmin = false;
+    private int paginaAtual = 1;
+    private int itensPorPagina = 10;
+    private int totalPaginas => (int)Math.Ceiling((double)(filteredPropostas.Count) / itensPorPagina);
+    private bool isEditing = false;
+    private int propostaIdEmEdicao = 0;
+    private string mensagemSucesso = "";
+    private System.Timers.Timer timerMensagem;
+
+    private List<PropostaTrabalhoDTO> filteredPropostas =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? propostas ?? new List<PropostaTrabalhoDTO>()
+            : propostas?.Where(p =>
+                p.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                GetClienteNome(p.ClienteId).Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList() ?? new List<PropostaTrabalhoDTO>();
+
+    private List<PropostaTrabalhoDTO> PropostasNaPagina =>
+        filteredPropostas
+            .Skip((paginaAtual - 1) * itensPorPagina)
+            .Take(itensPorPagina)
+            .ToList();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UtilizadorIdLogado = await UtilizadorService.GetUserIdAsync();
+            isAdmin = await UtilizadorService.IsAdminAsync();
+            await CarregarDados();
+        }
+    }
+
+    private async Task CarregarDados()
+    {
+        propostas = await PropostaService.GetAllPropostasAsync();
+        clientes = await ClienteService.GetAllClientesAsync();
+        categorias = await CategoriaService.GetAllCategoriasAsync();
+        StateHasChanged();
+    }
+
+    private string GetClienteNome(int clienteId)
+    {
+        var cliente = clientes?.FirstOrDefault(c => c.ClienteId == clienteId);
+        return cliente != null ? cliente.Nome : "Desconhecido";
+    }
+
+    private void AtualizarPesquisa(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+
+    private void IrParaDetalhes(int propostaId)
+    {
+        Navigation.NavigateTo($"/propostas-trabalho/{propostaId}");
+    }
+
+    private async Task ApagarProposta(int id)
+    {
+        var response = await PropostaService.DeletePropostaAsync(id);
+        if (response.IsSuccessStatusCode)
+        {
+            propostas?.RemoveAll(p => p.PropostaId == id);
+            ExibirMensagemSucesso("Proposta apagada com sucesso!");
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Erro ao apagar proposta.");
+        }
+    }
+
+    private void AbrirModal()
+    {
+        novaProposta = new CreatePropostaTrabalhoDTO();
+        if (!isAdmin)
+        {
+            novaProposta.UtilizadorId = UtilizadorIdLogado ?? 0;
+        }
+        else if (UtilizadorIdLogado.HasValue)
+        {
+            novaProposta.UtilizadorId = UtilizadorIdLogado.Value;
+        }
+        mostrarModal = true;
+        registrationFailed = false;
+        registrationErrorMessage = "";
+    }
+    private void AbrirModalEdicao(PropostaTrabalhoDTO proposta)
+    {
+        novaProposta = new CreatePropostaTrabalhoDTO()
+        {
+            Nome = proposta.Nome,
+            CategoriaId = proposta.CategoriaId,
+            ClienteId = proposta.ClienteId,
+            TotalHoras = proposta.TotalHoras,
+            Descricao = proposta.Descricao,
+            UtilizadorId = proposta.UtilizadorId 
+        };
+
+        propostaIdEmEdicao = proposta.PropostaId;
+        isEditing = true;
+        mostrarModal = true;
+        registrationFailed = false;
+        registrationErrorMessage = "";
+    }
+
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        isEditing = false;
+        propostaIdEmEdicao = 0;
+    }
+
+    private void ExibirErroValidacao()
+    {
+        registrationErrorMessage = "Existem erros no formulário. Por favor, corrija e tente novamente.";
+        registrationFailed = true;
+        StateHasChanged();
+    }
+
+    private async Task OnSubmit()
+    {
+        if (isEditing)
+        {
+            await AtualizarProposta();
+        }
+        else
+        {
+            await AdicionarProposta();
+        }
+    }
+
+    private async Task AdicionarProposta()
+    {
+        if (string.IsNullOrWhiteSpace(novaProposta.Nome) ||
+            novaProposta.CategoriaId == 0 ||
+            novaProposta.ClienteId == 0)
+        {
+            registrationErrorMessage = "Todos os campos são obrigatórios.";
+            registrationFailed = true;
+            StateHasChanged();
+            return;
+        }
+        if (novaProposta.TotalHoras < 1 || novaProposta.TotalHoras > 50)
+        {
+            registrationErrorMessage = "O total de horas deve estar entre 1 e 50.";
+            registrationFailed = true;
+            StateHasChanged();
+            return;
+        }
+
+        if (!isAdmin && UtilizadorIdLogado.HasValue)
+        {
+            novaProposta.UtilizadorId = UtilizadorIdLogado.Value;
+        }
+
+        try
+        {
+            var response = await PropostaService.CreatePropostaAsync(novaProposta);
+            if (response.IsSuccessStatusCode)
+            {
+                await CarregarDados();
+                FecharModal();
+                ExibirMensagemSucesso("Proposta adicionada com sucesso!");
+            }
+            else
+            {
+                registrationErrorMessage = $"Erro ao adicionar proposta: {response.ReasonPhrase}";
+                registrationFailed = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            registrationErrorMessage = $"Erro ao adicionar proposta: {ex.Message}";
+            registrationFailed = true;
+        }
+    }
+
+    private async Task AtualizarProposta()
+    {
+        if (string.IsNullOrWhiteSpace(novaProposta.Nome) ||
+            novaProposta.CategoriaId == 0 ||
+            novaProposta.ClienteId == 0)
+        {
+            registrationErrorMessage = "Todos os campos são obrigatórios.";
+            registrationFailed = true;
+            StateHasChanged();
+            return;
+        }
+        if (novaProposta.TotalHoras < 1 || novaProposta.TotalHoras > 50)
+        {
+            registrationErrorMessage = "O total de horas deve estar entre 1 e 50.";
+            registrationFailed = true;
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var dtoAtualizado = new UpdatePropostaTrabalhoDTO
+            {
+                Nome = novaProposta.Nome,
+                CategoriaId = novaProposta.CategoriaId,
+                ClienteId = novaProposta.ClienteId,
+                TotalHoras = novaProposta.TotalHoras,
+                Descricao = novaProposta.Descricao
+            };
+
+            var response = await PropostaService.UpdatePropostaAsync(propostaIdEmEdicao, dtoAtualizado);
+            if (response.IsSuccessStatusCode)
+            {
+                await CarregarDados();
+                FecharModal();
+                ExibirMensagemSucesso("Proposta atualizada com sucesso!");
+            }
+            else
+            {
+                registrationErrorMessage = $"Erro ao atualizar proposta: {response.ReasonPhrase}";
+                registrationFailed = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            registrationErrorMessage = $"Erro ao atualizar proposta: {ex.Message}";
+            registrationFailed = true;
+        }
+    }
+
+
+    private void ExibirMensagemSucesso(string mensagem)
+    {
+        mensagemSucesso = mensagem;
+        timerMensagem = new System.Timers.Timer(3000);
+        timerMensagem.Elapsed += (sender, args) =>
+        {
+            mensagemSucesso = string.Empty;
+            InvokeAsync(StateHasChanged);
+            timerMensagem.Dispose();
+        };
+        timerMensagem.Start();
+    }
+    private bool PodeIrParaPaginaAnterior => paginaAtual > 1;
+    private bool PodeIrParaPaginaProxima => paginaAtual < totalPaginas;
+
+    private void PaginaAnterior()
+    {
+        if (paginaAtual > 1)
+        {
+            paginaAtual--;
+            StateHasChanged();
+        }
+    }
+
+    private void PaginaProxima()
+    {
+        if (paginaAtual < totalPaginas)
+        {
+            paginaAtual++;
+            StateHasChanged();
+        }
+    }
+}
