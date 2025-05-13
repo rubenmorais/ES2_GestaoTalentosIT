@@ -75,7 +75,7 @@ else
     }
     @if (!isLoading && (isAdmin || talento.UtilizadorId == UtilizadorIdLogado))
     {
-        <button class="btn btn-success mt-3" @onclick="() => mostrarFormularioHabilidade = true">Adicionar Habilidade</button>
+        <button class="btn btn-success mt-3" @onclick="() => { editandoHabilidade = false; mostrarFormularioHabilidade = true; }">Adicionar Habilidade</button>
     }
 
     @if (mostrarFormularioExperiencia)
