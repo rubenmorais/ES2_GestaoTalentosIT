@@ -22,6 +22,7 @@ namespace WebAPI.Repositories
         {
             return _context.PropostasTrabalhos
                 .Include(p => p.Categoria)
+                .Include(p => p.Estado)
                 .Select(p => new PropostaTrabalhoDTO
                 {
                     PropostaId = p.Propostaid,
@@ -31,7 +32,9 @@ namespace WebAPI.Repositories
                     CategoriaId = p.Categoriaid,
                     NomeCategoria = p.Categoria.Categoria,
                     TotalHoras = p.TotalHoras,
-                    Descricao = p.Descricao
+                    Descricao = p.Descricao,
+                    EstadoId = p.Estadoid,
+                    NomeEstado = p.Estado.Estado1 
                 })
                 .ToList();
         }
@@ -40,6 +43,7 @@ namespace WebAPI.Repositories
         {
             return _context.PropostasTrabalhos
                 .Include(p => p.Categoria)
+                .Include(p => p.Estado)
                 .Where(p => p.Propostaid == id)
                 .Select(p => new PropostaTrabalhoDTO
                 {
@@ -50,7 +54,9 @@ namespace WebAPI.Repositories
                     CategoriaId = p.Categoriaid,
                     NomeCategoria = p.Categoria.Categoria,
                     TotalHoras = p.TotalHoras,
-                    Descricao = p.Descricao
+                    Descricao = p.Descricao,
+                    EstadoId = p.Estadoid,
+                    NomeEstado = p.Estado.Estado1
                 })
                 .FirstOrDefault();
         }
@@ -73,6 +79,19 @@ namespace WebAPI.Repositories
             if (!categoriaExiste)
             {
                 throw new ArgumentException("A CategoriaId fornecida não existe.");
+            }
+            
+            if (!_context.Estados.Any())
+            {
+                var estadosPadrao = new List<Estado>
+                {
+                    new Estado { Estadoid = 1, Estado1 = "Ativo" },
+                    new Estado { Estadoid = 2, Estado1 = "Pendente" },
+                    new Estado { Estadoid = 3, Estado1 = "Cancelado" },
+                };
+
+                _context.Estados.AddRange(estadosPadrao);
+                _context.SaveChanges();
             }
             
             var proposta = new PropostasTrabalho
@@ -105,13 +124,19 @@ namespace WebAPI.Repositories
             {
                 throw new ArgumentException("A CategoriaId fornecida não existe.");
             }
-            
+            var estadoExiste = _context.Estados.Any(e => e.Estadoid == dto.EstadoId);
+            if (!estadoExiste)
+            {
+                throw new ArgumentException("O EstadoId fornecido não existe.");
+            }
+
             proposta.Nome = dto.Nome;
             proposta.Categoriaid = dto.CategoriaId;
             proposta.Clienteid = dto.ClienteId;
             proposta.TotalHoras = dto.TotalHoras;
             proposta.Descricao = dto.Descricao;
-
+            proposta.Estadoid = dto.EstadoId;
+            
             _context.SaveChanges();
 
             return GetById(id);

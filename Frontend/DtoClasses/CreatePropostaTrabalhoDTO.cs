@@ -20,8 +20,10 @@ namespace Frontend.DTOClasses
         [Required(ErrorMessage = "O total de horas é obrigatório.")]
         [Range(1, 50, ErrorMessage = "O total de horas deve estar entre 0 e 50.")]
         public int TotalHoras { get; set; }
-        
+        [Required(ErrorMessage = "A descrição é obrigatório.")]
         [MaxLength(500, ErrorMessage = "A descrição não pode ter mais de 500 carateres.")]
         public string Descricao { get; set; }
+
+        public int EstadoId = 1 ;
     }
 }

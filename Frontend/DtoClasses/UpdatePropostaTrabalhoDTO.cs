@@ -19,6 +19,8 @@ namespace Frontend.DTOClasses
         
         [MaxLength(500, ErrorMessage = "A descrição não pode ter mais de 500 carateres.")]
         public string Descricao { get; set; }
+        [Required(ErrorMessage = "O estado é obrigatório.")]
+        public int EstadoId { get; set; }
     }
 }
 

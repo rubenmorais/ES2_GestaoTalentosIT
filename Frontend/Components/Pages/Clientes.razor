@@ -16,6 +16,12 @@
         @mensagemSucesso
     </div>
 }
+@if (!string.IsNullOrEmpty(erroMensagem))
+{
+    <div class="alert alert-danger">
+        @erroMensagem
+    </div>
+}
 
 <input type="text" @oninput="AtualizarPesquisa" 
        placeholder="@(isAdmin ? "Pesquisar por nome, email ou criador" : "Pesquisar por nome ou email")" 
@@ -215,15 +221,26 @@ else
         var sucesso = await ClienteService.DeleteClienteAsync(id);
         if (sucesso)
         {
-            Console.WriteLine("Cliente apagado com sucesso!");
             clientes?.RemoveAll(c => c.ClienteId == id);
             ExibirMensagemSucesso("Cliente apagado com sucesso!");
-            StateHasChanged();
+            erroMensagem = "";
         }
         else
         {
-            Console.WriteLine("Erro ao apagar cliente.");
+            erroMensagem = "Erro ao apagar cliente. Verifique se tem dados associados.";
+
+            var timerErro = new System.Timers.Timer(5000);
+            timerErro.Elapsed += (sender, e) =>
+            {
+                erroMensagem = "";
+                InvokeAsync(StateHasChanged);
+                timerErro.Dispose();
+            };
+            timerErro.AutoReset = false;
+            timerErro.Start();
         }
+
+        StateHasChanged();
     }
 
     private void AbrirModal()

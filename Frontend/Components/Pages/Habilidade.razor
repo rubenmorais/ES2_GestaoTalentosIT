@@ -242,20 +242,24 @@ else
             if (sucesso)
             {
                 _pageErrorMessage = string.Empty;
+                _pageSuccessMessage = "Habilidade apagada com sucesso!";
                 habilidades?.RemoveAll(h => h.Habilidadeid == id);
             }
             else
             {
-                _pageErrorMessage = "Erro ao apagar habilidade.";
+                _pageSuccessMessage = string.Empty;
+                _pageErrorMessage = "Erro ao apagar habilidade. Verifique se ela tem dados associados.";
             }
         }
         catch (Exception ex)
         {
+            _pageSuccessMessage = string.Empty;
             _pageErrorMessage = $"{ex.Message}";
         }
 
         StateHasChanged();
     }
+
 
     private void AbrirModal()
     {

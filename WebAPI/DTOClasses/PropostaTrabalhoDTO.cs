@@ -12,5 +12,7 @@ namespace WebAPI.DTOClasses
         public string NomeCategoria { get; set; }
         public int TotalHoras { get; set; }
         public string Descricao { get; set; }
+        public int EstadoId { get; set; }
+        public string NomeEstado { get; set; }
     }
 }

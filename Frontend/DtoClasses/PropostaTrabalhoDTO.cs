@@ -10,5 +10,6 @@ namespace Frontend.DTOClasses
         public string NomeCategoria { get; set; }
         public int TotalHoras { get; set; }
         public string Descricao { get; set; }
+        public string NomeEstado { get; set; } = string.Empty;
     }
 }
