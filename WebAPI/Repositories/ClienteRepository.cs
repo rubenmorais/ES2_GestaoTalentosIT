@@ -115,13 +115,28 @@ namespace WebAPI.Repositories
                 {
                     throw new Exception("Cliente não encontrado.");
                 }
+                
+                var tabelasAssociadas = new (string Tabela, Func<int, bool> Verificar)[]
+                {
+                    ("PropostasTrabalho", (clienteId) => 
+                        _context.PropostasTrabalhos.Any(pt => pt.Clienteid == clienteId)),
+                };
+
+                foreach (var tabela in tabelasAssociadas)
+                {
+                    if (tabela.Verificar(id))
+                    {
+                        throw new Exception(
+                            $"O cliente não pode ser apagado, pois possui registos associados em '{tabela.Tabela}'.");
+                    }
+                }
 
                 _context.Clientes.Remove(cliente);
                 _context.SaveChanges();
             }
             catch (Exception ex)
             {
-                throw new Exception("Erro ao apagar cliente: " + ex.Message);
+                throw new ApplicationException("Erro ao apagar cliente: " + ex.Message, ex);
             }
         }
     }

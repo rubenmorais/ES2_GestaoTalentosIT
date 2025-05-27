@@ -25,6 +25,8 @@ builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<TalentoHabilidadeService>();
 builder.Services.AddScoped<PropostaTrabalhoService>();
+builder.Services.AddScoped<PropostaHabilidadeService>();
+builder.Services.AddScoped<EstadoService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient<AuthService>(client =>
@@ -51,6 +53,10 @@ builder.Services.AddHttpClient<TalentoHabilidadeService>(client =>
     client.BaseAddress = new Uri("https://localhost:7070/");
 });
 builder.Services.AddHttpClient<PropostaTrabalhoService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7070/");
+});
+builder.Services.AddHttpClient<EstadoService>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7070/");
 });

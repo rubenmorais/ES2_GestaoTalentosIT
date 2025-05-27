@@ -118,13 +118,22 @@ namespace WebAPI.Repositories
                 {
                     throw new Exception("Categoria não encontrada.");
                 }
-                
-                var possuiHabilidades = _context.Habilidades.Any(p => p.Categoriaid == id);
-                if (possuiHabilidades)
+
+                var tabelasAssociadas = new (string Tabela, Func<int, bool> Verificar)[]
                 {
-                    throw new Exception("A categoria não pode ser apagada, pois possui habilidades associadas.");
+                    ("PropostasTrabalho", categoriaId => _context.PropostasTrabalhos.Any(pt => pt.Categoriaid == categoriaId)),
+                    ("Habilidades", categoriaId => _context.Habilidades.Any(h => h.Categoriaid == categoriaId)),
+                };
+
+                foreach (var tabela in tabelasAssociadas)
+                {
+                    if (tabela.Verificar(id))
+                    {
+                        throw new Exception(
+                            $"A categoria não pode ser apagada, pois possui registos associados na tabela '{tabela.Tabela}'.");
+                    }
                 }
-                
+
                 _context.CategoriasProfissionais.Remove(categoria);
                 _context.SaveChanges();
             }

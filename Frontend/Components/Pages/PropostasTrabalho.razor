@@ -8,6 +8,7 @@
 @inject ClienteService ClienteService
 @inject CategoriaService CategoriaService
 @inject NavigationManager Navigation
+@inject EstadoService EstadoService
 
 <PageTitle>Propostas de Trabalho</PageTitle>
 
@@ -51,9 +52,12 @@ else
                 <td>@GetClienteNome(proposta.ClienteId)</td>
                 <td>@proposta.TotalHoras</td>
                 <td>
-                    <button class="btn btn-primary" @onclick="() => IrParaDetalhes(proposta.PropostaId)">Detalhes</button>
-                    <button class="btn btn-warning" @onclick="() => AbrirModalEdicao(proposta)">Editar</button>
-                    <button class="btn btn-danger" @onclick="() => ApagarProposta(proposta.PropostaId)">Apagar</button>
+                    <button class="btn btn-primary" style="margin-right: 5px" @onclick="() => IrParaDetalhes(proposta.PropostaId)">Detalhes</button>
+                    @if ((isAdmin) || proposta.UtilizadorId == UtilizadorIdLogado)
+                    {
+                        <button class="btn btn-warning" @onclick="() => AbrirModalEdicao(proposta)">Editar</button>
+                        <button class="btn btn-danger" @onclick="() => ApagarProposta(proposta.PropostaId)">Apagar</button>
+                    }
                 </td>
             </tr>
         }
@@ -100,9 +104,16 @@ else
                         <div class="form-group" style="margin-top: 10px">
                             <label for="CategoriaId">Categoria:</label>
                             <InputSelect id="CategoriaId" class="form-control" @bind-Value="novaProposta.CategoriaId">
-                                @foreach (var categoria in categorias)
+                                @if (categorias != null && categorias.Any())
                                 {
-                                    <option value="@categoria.CategoriaId">@categoria.Categoria</option>
+                                    @foreach (var categoria in categorias)
+                                    {
+                                        <option value="@categoria.CategoriaId">@categoria.Categoria</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option disabled selected value="">Sem categorias disponíveis</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => novaProposta.CategoriaId)" />
@@ -111,13 +122,33 @@ else
                         <div class="form-group" style="margin-top: 10px">
                             <label for="ClienteId">Cliente:</label>
                             <InputSelect id="ClienteId" class="form-control" @bind-Value="novaProposta.ClienteId">
-                                @foreach (var cliente in clientes)
+                                @if (filteredClientes != null && filteredClientes.Any())
                                 {
-                                    <option value="@cliente.ClienteId">@cliente.Nome</option>
+                                    @foreach (var cliente in filteredClientes)
+                                    {
+                                        <option value="@cliente.ClienteId">@cliente.Nome</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option disabled selected value="">Sem clientes disponíveis</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => novaProposta.ClienteId)" />
                         </div>
+                        @if (isEditing)
+                        {
+                        <div class="form-group" style="margin-top: 10px">
+                            <label for="EstadoId">Estado:</label>
+                            <InputSelect id="EstadoId" class="form-control" @bind-Value="novaProposta.EstadoId">
+                                @foreach (var estado in estadosDisponiveis)
+                                {
+                                <option value="@estado.EstadoId">@estado.Nome</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => novaProposta.EstadoId)" />
+                        </div>
+                        }
 
                         <div class="form-group" style="margin-top: 10px">
                             <label for="TotalHoras">Total de Horas:</label>
@@ -146,6 +177,8 @@ else
     private List<PropostaTrabalhoDTO>? propostas;
     private List<ClienteDTO>? clientes;
     private List<CategoriaDTO>? categorias;
+    private List<EstadoDTO>? estadosDisponiveis;
+    private List<UtilizadorDTO>? utilizadores;
     private string searchTerm = "";
 
     private bool mostrarModal = false;
@@ -192,8 +225,30 @@ else
         propostas = await PropostaService.GetAllPropostasAsync();
         clientes = await ClienteService.GetAllClientesAsync();
         categorias = await CategoriaService.GetAllCategoriasAsync();
+        estadosDisponiveis = await EstadoService.GetAllEstadosAsync() ?? new List<EstadoDTO>();
+        utilizadores = await UtilizadorService.GetAllUsersAsync();
         StateHasChanged();
     }
+    private List<ClienteDTO> filteredClientes
+    {
+        get
+        {
+            var clientesVisiveis = clientes?.Where(c => isAdmin || c.UtilizadorId == UtilizadorIdLogado).ToList() ?? new();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return clientesVisiveis;
+
+            return clientesVisiveis.Where(c =>
+                c.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                c.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (isAdmin && utilizadores != null &&
+                 utilizadores.Any(u =>
+                     u.Utilizadorid == c.UtilizadorId &&
+                     u.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+            ).ToList();
+        }
+    }
+
 
     private string GetClienteNome(int clienteId)
     {
@@ -242,8 +297,11 @@ else
         registrationFailed = false;
         registrationErrorMessage = "";
     }
-    private void AbrirModalEdicao(PropostaTrabalhoDTO proposta)
+    private async Task AbrirModalEdicao(PropostaTrabalhoDTO proposta)
     {
+        var estado = estadosDisponiveis?.FirstOrDefault(e => e.Nome == proposta.NomeEstado);
+        int estadoId = estado?.EstadoId ?? 1; 
+
         novaProposta = new CreatePropostaTrabalhoDTO()
         {
             Nome = proposta.Nome,
@@ -251,7 +309,8 @@ else
             ClienteId = proposta.ClienteId,
             TotalHoras = proposta.TotalHoras,
             Descricao = proposta.Descricao,
-            UtilizadorId = proposta.UtilizadorId 
+            UtilizadorId = proposta.UtilizadorId,
+            EstadoId = estadoId 
         };
 
         propostaIdEmEdicao = proposta.PropostaId;
@@ -292,7 +351,8 @@ else
     {
         if (string.IsNullOrWhiteSpace(novaProposta.Nome) ||
             novaProposta.CategoriaId == 0 ||
-            novaProposta.ClienteId == 0)
+            novaProposta.ClienteId == 0 || 
+            string.IsNullOrWhiteSpace(novaProposta.Descricao))
         {
             registrationErrorMessage = "Todos os campos são obrigatórios.";
             registrationFailed = true;
@@ -361,7 +421,8 @@ else
                 CategoriaId = novaProposta.CategoriaId,
                 ClienteId = novaProposta.ClienteId,
                 TotalHoras = novaProposta.TotalHoras,
-                Descricao = novaProposta.Descricao
+                Descricao = novaProposta.Descricao,
+                EstadoId = novaProposta.EstadoId,
             };
 
             var response = await PropostaService.UpdatePropostaAsync(propostaIdEmEdicao, dtoAtualizado);

@@ -117,9 +117,13 @@ namespace WebAPI.Repositories
         {
             var habilidade = await _context.Habilidades
                 .Include(h => h.TalentosHabilidades)
+                .Include(h => h.PropostasHabilidades)
                 .FirstOrDefaultAsync(h => h.Habilidadeid == id);
 
             if (habilidade == null)
+                return false;
+
+            if (habilidade.PropostasHabilidades.Any())
                 return false;
             
             if (habilidade.TalentosHabilidades.Any())

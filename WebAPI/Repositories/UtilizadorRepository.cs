@@ -15,6 +15,45 @@ namespace WebAPI.Repositories
         public UtilizadorRepository(ApplicationDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            EnsureTiposExist();    
+            EnsureAdminExists();
+        }
+        private void EnsureAdminExists()
+        {
+            if (!_context.Utilizadores.Any())  
+            {
+                var adminTipo = _context.Tipos.FirstOrDefault(t => t.Tipoid == 1);
+                if (adminTipo == null)
+                {
+                    throw new Exception("Tipo de utilizador admin (Tipoid = 1) não encontrado no banco de dados.");
+                }
+
+                var admin = new Utilizadores
+                {
+                    Nome = "admin",
+                    Email = "admin@admin.com",
+                    Tipoid = adminTipo.Tipoid,
+                    PalavraPasse = HashPassword("admin") 
+                };
+
+                _context.Utilizadores.Add(admin);
+                _context.SaveChanges();
+            }
+        }
+        private void EnsureTiposExist()
+        {
+            if (!_context.Tipos.Any())
+            {
+                var tipos = new List<Tipo>
+                {
+                    new Tipo { Tipoid = 1, Tipo1 = "Administrador" },
+                    new Tipo { Tipoid = 2, Tipo1 = "Utilizador" },
+                    new Tipo { Tipoid = 3, Tipo1 = "Gestor de utilizadores" }
+                };
+
+                _context.Tipos.AddRange(tipos);
+                _context.SaveChanges();
+            }
         }
 
         public List<UtilizadorDTO> GetAll()
@@ -204,6 +243,8 @@ namespace WebAPI.Repositories
                 {
                     ("Habilidades", (id) => _context.Habilidades.Any(h => h.Criadorid == id)),
                     ("Talentos", (id) => _context.Talentos.Any(t => t.Utilizadorid == id)),
+                    ("PropostasTrabalho", (id) => _context.PropostasTrabalhos.Any(pt => pt.Utilizadorid == id)),
+                    ("Cliente", (id) => _context.Clientes.Any(pt => pt.Utilizadorid == id)),
                 };
                 
                 foreach (var tabela in tabelasAssociadas)
