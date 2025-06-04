@@ -48,13 +48,15 @@ else
                 <p><strong>Estado:</strong>
                     @if (!isLoading && (isAdmin || proposta.UtilizadorId == UtilizadorIdLogado))
                     {
-                    <InputSelect class="form-select d-inline w-auto" @bind-Value="estadoSelecionado">
-                        @foreach (var estado in estadosDisponiveis)
-                        {
-                        <option value="@estado.EstadoId">@estado.Nome</option>
-                        }
-                    </InputSelect>
-                    <button class="btn btn-primary ms-2" @onclick="AtualizarEstado">Atualizar Estado</button>
+                        <InputSelect class="form-select d-inline w-auto" 
+                                     Value="estadoSelecionado" 
+                                     ValueChanged="async (int novoEstado) => await OnEstadoChanged(novoEstado)" 
+                                     ValueExpression="@(() => estadoSelecionado)">
+                            @foreach (var estado in estadosDisponiveis)
+                            {
+                                <option value="@estado.EstadoId">@estado.Nome</option>
+                            }
+                        </InputSelect>
                     }
                     else
                     {
@@ -361,6 +363,12 @@ else
         };
         timerMensagem.Start();
     }
+    private async Task OnEstadoChanged(int novoEstadoId)
+    {
+        estadoSelecionado = novoEstadoId;
+        await AtualizarEstado();
+    }
+
     private string GetBadgeClass(string? estado)
     {
         if (string.IsNullOrWhiteSpace(estado))
