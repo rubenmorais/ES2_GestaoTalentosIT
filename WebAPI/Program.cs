@@ -28,6 +28,7 @@ builder.Services.AddScoped<IHabilidadeRepository, HabilidadeRepository>();
 builder.Services.AddScoped<IPropostaTrabalhoRepository, PropostaTrabalhoRepository>();
 builder.Services.AddScoped<IPropostaHabilidadeRepository, PropostaHabilidadeRepository>();
 builder.Services.AddScoped<IEstadoRepository, EstadoRepository>();
+builder.Services.AddScoped<IPropostaTalentoRepository, PropostaTalentoRepository>();
 builder.Services.AddScoped<UtilizadorService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TalentoService>();
@@ -39,6 +40,7 @@ builder.Services.AddScoped<TalentoHabilidadeService>();
 builder.Services.AddScoped<PropostaTrabalhoService>();
 builder.Services.AddScoped<PropostaHabilidadeService>();
 builder.Services.AddScoped<EstadoService>();
+builder.Services.AddScoped<PropostaTalentoService>();
 
 
 
