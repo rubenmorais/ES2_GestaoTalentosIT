@@ -53,4 +53,20 @@ namespace Frontend.Strategies
         public decimal Min { get; set; }
         public decimal Max { get; set; } // 0 significa sem limite máximo
     }
+
+    public class HabilidadeFilterStrategy : ITalentoFilterStrategy
+    {
+        public string FilterName => "Habilidade";
+        public string Description => "Filtra talentos por habilidades";
+
+        public IEnumerable<TalentoDTO> Filter(IEnumerable<TalentoDTO> talentos, object filterCriteria)
+        {
+            if (filterCriteria == null || !(filterCriteria is List<int> selectedHabilidadeIds) || !selectedHabilidadeIds.Any())
+                return talentos;
+
+            return talentos.Where(t => 
+                t.Habilidades != null && 
+                t.Habilidades.Any(h => selectedHabilidadeIds.Contains(h.HabilidadeId)));
+        }
+    }
 }

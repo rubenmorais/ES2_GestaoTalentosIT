@@ -1,10 +1,12 @@
 @page "/talentos"
+@using Frontend.DtoClasses
 @using Frontend.DTOClasses
 @using Frontend.Strategies
 @rendermode InteractiveServer
 @using Frontend.Services
 @inject TalentoService TalentoService
 @inject UtilizadorService UtilizadorService  
+@inject HabilidadeService HabilidadeService
 
 <PageTitle>Talentos</PageTitle>
 
@@ -42,6 +44,11 @@
                 </div>
                 <button class="btn btn-primary" @onclick="ApplyVisibilityFilter">Filtrar</button>
             </div>
+        }
+        else if (selectedStrategyName == "Habilidade")
+        {
+            <button class="btn btn-outline-primary" @onclick="() => mostrarModalHabilidade = true">Selecionar Habilidades</button>
+            <span class="ms-2 text-muted">@((selectedHabilidadeIds.Count > 0) ? $"{selectedHabilidadeIds.Count} selecionada(s)" : "Nenhuma selecionada")</span>
         }
         else if (selectedStrategyName == "Nome" || selectedStrategyName == "País")
         {
@@ -172,6 +179,34 @@ else
     </div>
 }
 
+@if (mostrarModalHabilidade)
+{
+    <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.3);" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Filtrar por Habilidades</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModalHabilidade" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <select class="form-select mb-2" multiple size="8" style="min-width: 250px; max-width: 100%; min-height: 120px;" @onchange="OnHabilidadeSelectionChanged">
+                        @foreach (var habilidade in todasHabilidades)
+                        {
+                            <option value="@habilidade.Habilidadeid" selected="@selectedHabilidadeIds.Contains(habilidade.Habilidadeid)">@habilidade.Nome</option>
+                        }
+                    </select>
+                    <small class="text-muted">Segure Ctrl (ou Command no Mac) para selecionar múltiplas habilidades</small>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="LimparHabilidadeFiltro">Limpar</button>
+                    <button class="btn btn-primary" @onclick="AplicarEFecharModalHabilidade">Filtrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
 @code {
     private List<TalentoDTO>? talentos;
     private string searchTerm = "";
@@ -195,6 +230,9 @@ else
     private PriceRange priceRange = new PriceRange { Min = 0, Max = 0 };
     private bool visibilityValue = true;
     private IEnumerable<TalentoDTO> currentFilteredTalentos;
+    
+    private List<HabilidadeDTO> todasHabilidades = new();
+    private List<int> selectedHabilidadeIds = new();
     
     private int totalPaginas => 
         filteredTalentos.Count == 0 
@@ -225,6 +263,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         filterContext = new TalentoFilterContext(new NameFilterStrategy());
+        todasHabilidades = await HabilidadeService.GetAllHabilidadesAsync() ?? new List<HabilidadeDTO>();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -283,6 +322,18 @@ else
         }
     }
     
+    private void ApplyHabilidadeFilter()
+    {
+        var strategy = strategyManager.GetStrategyByName("Habilidade");
+        if (strategy != null)
+        {
+            filterContext.SetStrategy(strategy);
+            currentFilteredTalentos = filterContext.ExecuteFilter(talentos, selectedHabilidadeIds);
+            paginaAtual = 1; // Reset to first page
+            StateHasChanged();
+        }
+    }
+    
     private void ResetFilters()
     {
         currentFilteredTalentos = null;
@@ -290,6 +341,7 @@ else
         searchTerm = "";
         priceRange = new PriceRange { Min = 0, Max = 0 };
         visibilityValue = true;
+        selectedHabilidadeIds = new();
         paginaAtual = 1;
         StateHasChanged();
     }
@@ -506,6 +558,32 @@ else
                 registrationErrorMessage = ex.Message;
                 registrationFailed = true;
             }
+        }
+    }
+
+    private bool mostrarModalHabilidade = false;
+    private void FecharModalHabilidade()
+    {
+        mostrarModalHabilidade = false;
+    }
+    private void AplicarEFecharModalHabilidade()
+    {
+        ApplyHabilidadeFilter();
+        mostrarModalHabilidade = false;
+    }
+    private void LimparHabilidadeFiltro()
+    {
+        selectedHabilidadeIds.Clear();
+        ApplyHabilidadeFilter();
+        mostrarModalHabilidade = false;
+    }
+
+    private void OnHabilidadeSelectionChanged(ChangeEventArgs e)
+    {
+        var selectedValues = e.Value as string[];
+        if (selectedValues != null)
+        {
+            selectedHabilidadeIds = selectedValues.Select(int.Parse).ToList();
         }
     }
 }

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Frontend.DTOClasses
 {
     public class TalentoDTO
@@ -9,5 +11,6 @@ namespace Frontend.DTOClasses
         public string Email { get; set; }
         public decimal PrecoPorHora { get; set; }
         public bool Visibilidade { get; set; }
+        public List<TalentoHabilidadeDTO> Habilidades { get; set; } = new List<TalentoHabilidadeDTO>();
     }
 }

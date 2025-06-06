@@ -13,7 +13,8 @@ namespace Frontend.Strategies
             {
                 new NameFilterStrategy(),
                 new CountryFilterStrategy(),
-                new PriceRangeFilterStrategy()
+                new PriceRangeFilterStrategy(),
+                new HabilidadeFilterStrategy()
             };
         }
         

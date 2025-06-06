@@ -5,6 +5,7 @@ using WebAPI.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI.Repositories
 {
@@ -20,6 +21,8 @@ namespace WebAPI.Repositories
         public List<TalentoDTO> GetAll()
         {
             return _context.Talentos
+                .Include(t => t.TalentosHabilidades)
+                    .ThenInclude(th => th.Habilidade)
                 .Select(t => new TalentoDTO
                 {
                     Talentoid = t.Talentoid,
@@ -28,7 +31,14 @@ namespace WebAPI.Repositories
                     Pais = t.Pais,
                     Email = t.Email,
                     PrecoPorHora = t.PrecoHora ?? 0,
-                    Visibilidade = t.Visibilidade ?? false
+                    Visibilidade = t.Visibilidade ?? false,
+                    Habilidades = t.TalentosHabilidades.Select(th => new TalentoHabilidadeDTO
+                    {
+                        TalentoId = th.Talentoid,
+                        HabilidadeId = th.Habilidadeid,
+                        NomeHabilidade = th.Habilidade.Nome,
+                        AnosExperiencia = th.AnosExperiencia
+                    }).ToList()
                 })
                 .ToList();
         }
@@ -36,6 +46,8 @@ namespace WebAPI.Repositories
         public TalentoDTO GetById(int id)
         {
             return _context.Talentos
+                .Include(t => t.TalentosHabilidades)
+                    .ThenInclude(th => th.Habilidade)
                 .Where(t => t.Talentoid == id)
                 .Select(t => new TalentoDTO
                 {
@@ -45,7 +57,14 @@ namespace WebAPI.Repositories
                     Pais = t.Pais,
                     Email = t.Email,
                     PrecoPorHora = t.PrecoHora ?? 0,
-                    Visibilidade = t.Visibilidade ?? false
+                    Visibilidade = t.Visibilidade ?? false,
+                    Habilidades = t.TalentosHabilidades.Select(th => new TalentoHabilidadeDTO
+                    {
+                        TalentoId = th.Talentoid,
+                        HabilidadeId = th.Habilidadeid,
+                        NomeHabilidade = th.Habilidade.Nome,
+                        AnosExperiencia = th.AnosExperiencia
+                    }).ToList()
                 })
                 .FirstOrDefault();
         }
@@ -82,7 +101,10 @@ namespace WebAPI.Repositories
 
         public TalentoDTO Update(int id, UpdateTalentoDTO dto)
         {
-            var talento = _context.Talentos.FirstOrDefault(t => t.Talentoid == id);
+            var talento = _context.Talentos
+                .Include(t => t.TalentosHabilidades)
+                .FirstOrDefault(t => t.Talentoid == id);
+                
             if (talento == null)
             {
                 throw new Exception($"Talento com ID {id} não encontrado.");
@@ -113,7 +135,14 @@ namespace WebAPI.Repositories
                 Pais = talento.Pais,
                 Email = talento.Email,
                 PrecoPorHora = talento.PrecoHora ?? 0,
-                Visibilidade = talento.Visibilidade ?? false
+                Visibilidade = talento.Visibilidade ?? false,
+                Habilidades = talento.TalentosHabilidades.Select(th => new TalentoHabilidadeDTO
+                {
+                    TalentoId = th.Talentoid,
+                    HabilidadeId = th.Habilidadeid,
+                    NomeHabilidade = th.Habilidade.Nome,
+                    AnosExperiencia = th.AnosExperiencia
+                }).ToList()
             };
         }
 

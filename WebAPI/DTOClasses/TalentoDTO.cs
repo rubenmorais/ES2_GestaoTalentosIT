@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace WebAPI.DTOClasses {
     public class TalentoDTO {
@@ -9,5 +10,6 @@ namespace WebAPI.DTOClasses {
         public string Email { get; set; }
         public decimal PrecoPorHora { get; set; }
         public bool Visibilidade { get; set; }
+        public List<TalentoHabilidadeDTO> Habilidades { get; set; } = new List<TalentoHabilidadeDTO>();
     }
 }
