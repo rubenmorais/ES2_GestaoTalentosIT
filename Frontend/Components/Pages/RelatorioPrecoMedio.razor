@@ -1,0 +1,82 @@
+@page "/relatorio-preco-medio"
+@using Frontend.DTOClasses
+@using Frontend.Services
+@inject RelatorioService RelatorioService
+@inject UtilizadorService UtilizadorService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Relatório de Preço Médio</PageTitle>
+
+<h1>Relatório de Preço Médio por Categoria e País</h1>
+
+@if (isLoading)
+{
+    <p>Carregando...</p>
+}
+else if (relatorio == null || !relatorio.Any())
+{
+    <p>Nenhum dado disponível para exibir.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Categoria</th>
+                    <th>País</th>
+                    <th>Preço Médio Mensal (€)</th>
+                    <th>Quantidade de Talentos</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in relatorio)
+                {
+                    <tr>
+                        <td>@item.Categoria</td>
+                        <td>@item.Pais</td>
+                        <td>@item.PrecoMedioMensal.ToString("N2")</td>
+                        <td>@item.QuantidadeTalentos</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<RelatorioPrecoMedioDTO>? relatorio;
+    private bool isLoading = true;
+    private bool isAdmin = false;
+    private bool isFirstRender = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isFirstRender = false;
+            isAdmin = await UtilizadorService.IsAdminAsync();
+            
+            if (!isAdmin)
+            {
+                Navigation.NavigateTo("/");
+                return;
+            }
+
+            try
+            {
+                relatorio = await RelatorioService.GetRelatorioPrecoMedioAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao carregar relatório: {ex.Message}");
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+} 

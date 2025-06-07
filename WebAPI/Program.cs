@@ -41,8 +41,8 @@ builder.Services.AddScoped<PropostaTrabalhoService>();
 builder.Services.AddScoped<PropostaHabilidadeService>();
 builder.Services.AddScoped<EstadoService>();
 builder.Services.AddScoped<PropostaTalentoService>();
-
-
+builder.Services.AddScoped<IRelatorioRepository, RelatorioRepository>();
+builder.Services.AddScoped<RelatorioService>();
 
 var app = builder.Build();
 
