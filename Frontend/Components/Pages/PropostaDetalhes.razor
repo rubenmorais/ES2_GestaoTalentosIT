@@ -6,10 +6,12 @@
 @using Frontend.Services
 @inject PropostaTrabalhoService PropostaService
 @inject PropostaHabilidadeService PropostaHabilidadeService
+@inject PropostaTalentoService PropostaTalentoService
 @inject UtilizadorService UtilizadorService
 @inject ClienteService ClienteService
 @inject CategoriaService CategoriaService
 @inject HabilidadeService HabilidadeService
+@inject TalentoService TalentoService
 @inject NavigationManager Navigation
 @inject EstadoService EstadoService
 
@@ -74,10 +76,11 @@ else
         }
     </div>
 
-    <h4>Habilidades Requeridas</h4>
+    <h4 class="mt-4">Habilidades Requeridas</h4>
+
     @if (habilidadesRequeridas == null || habilidadesRequeridas.Count == 0)
     {
-        <p>Nenhuma habilidade específica requerida para esta proposta.</p>
+        <p class="mb-3">Nenhuma habilidade específica requerida para esta proposta.</p>
     }
     else
     {
@@ -96,12 +99,8 @@ else
                             @if (!isLoading && (isAdmin || proposta.UtilizadorId == UtilizadorIdLogado))
                             {
                                 <div>
-                                    <button class="btn btn-sm btn-warning me-2" @onclick="() => EditarHabilidade(hab)">
-                                        Editar
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" @onclick="() => RemoverHabilidade(hab.HabilidadeId)">
-                                        Apagar
-                                    </button>
+                                    <button class="btn btn-sm btn-warning me-2" @onclick="() => EditarHabilidade(hab)">Editar</button>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => RemoverHabilidade(hab.HabilidadeId)">Apagar</button>
                                 </div>
                             }
                         </div>
@@ -113,9 +112,54 @@ else
 
     @if (!isLoading && (isAdmin || proposta.UtilizadorId == UtilizadorIdLogado))
     {
-        <button class="btn btn-success mt-3" @onclick="() => { editandoHabilidade = false; mostrarFormularioHabilidade = true; }">
+        <button class="btn btn-success mt-1" @onclick="() => { editandoHabilidade = false; mostrarFormularioHabilidade = true; }">
             Adicionar Habilidade Requerida
         </button>
+    }
+
+    @if (habilidadesRequeridas == null || habilidadesRequeridas.Count == 0)
+    {
+        <h4 class="mt-4">Talentos Associados</h4>
+        <p class="mb-3 text-muted">Por favor, adicione pelo menos uma habilidade para associar talentos.</p>
+    }
+    else
+    {
+        <h4 class="mt-3">Talentos Associados</h4>
+
+        @if (talentosSelecionados == null || talentosSelecionados.Count == 0)
+        {
+            <p class="mb-3">Nenhum talento associado a esta proposta.</p>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var talento in talentosSelecionados)
+                {
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@talento.NomeTalento</strong>
+                                </div>
+                                @if (!isLoading && (isAdmin || proposta.UtilizadorId == UtilizadorIdLogado))
+                                {
+                                    <div>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => RemoverTalento(talento.TalentoId)">Apagar</button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (!isLoading && (isAdmin || proposta.UtilizadorId == UtilizadorIdLogado))
+        {
+            <button class="btn btn-success mt-1" @onclick="() => { mostrarFormularioTalento = true; }">
+                Adicionar Talento
+            </button>
+        }
     }
 
     @if (mostrarFormularioHabilidade)
@@ -169,6 +213,47 @@ else
             </div>
         </div>
     }
+    
+    @if (mostrarFormularioTalento)
+    {
+        <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" aria-labelledby="talentoModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="talentoModalTitle">
+                            Adicionar Talento
+                        </h5>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="novoTalento" OnValidSubmit="HandleTalentoSubmit">
+                            <DataAnnotationsValidator />
+                            @if (!string.IsNullOrEmpty(validacaoMensagemTalento))
+                            {
+                                <div class="alert alert-danger">@validacaoMensagemTalento</div>
+                            }
+
+                            <div class="mb-3">
+                                <label class="form-label">Talento</label>
+                                <InputSelect class="form-select" @bind-Value="novoTalento.TalentoId">
+                                    <option value="0">Selecione um talento</option>
+                                    @foreach (var talento in talentosFiltrados)
+                                    {
+                                        <option value="@talento.Talentoid">@talento.Nome</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => novoTalento.TalentoId)" />
+                            </div>
+                        </EditForm>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => mostrarFormularioTalento = false">Cancelar</button>
+                        <button type="button" class="btn btn-success" @onclick="HandleTalentoSubmit">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
 }
 
 @code {
@@ -178,6 +263,7 @@ else
     private PropostaTrabalhoDTO? proposta;
     private List<PropostaHabilidadeDTO> habilidadesRequeridas = new();
     private List<HabilidadeDTO> todasHabilidades = new();
+    private List<TalentoDTO> todosTalentos = new();
     private List<ClienteDTO>? clientes;
     private string? validacaoMensagemHabilidade;
     private bool isAdmin = false;
@@ -193,12 +279,16 @@ else
     {
         proposta = await PropostaService.GetPropostaByIdAsync(PropostaId);
         await LoadHabilidades();
+        await LoadTalentos();
         todasHabilidades = await HabilidadeService.GetAllHabilidadesAsync();
+        todosTalentos = await TalentoService.GetAllTalentosAsync();
         clientes = await ClienteService.GetAllClientesAsync();
         estadosDisponiveis = await EstadoService.GetAllEstadosAsync() ?? new List<EstadoDTO>();
 
         if (proposta != null)
             estadoSelecionado = estadosDisponiveis.FirstOrDefault(e => e.Nome == proposta.NomeEstado)?.EstadoId ?? 1;
+        
+        FiltrarTalentosPorHabilidades();
     }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -217,6 +307,7 @@ else
         try
         {
             habilidadesRequeridas = await PropostaHabilidadeService.GetHabilidadesByPropostaIdAsync(PropostaId);  
+            FiltrarTalentosPorHabilidades();
         }
         catch(Exception ex)
         {
@@ -349,6 +440,75 @@ else
             validacaoMensagemHabilidade = $"{errorMsg}";
             Console.WriteLine($"Erro ao {(editandoHabilidade ? "atualizar" : "adicionar")} habilidade");
         }
+    }
+    
+    // Talento
+    private bool mostrarFormularioTalento = false;
+    private AddPropostaTalentoDTO novoTalento = new();
+    private List<PropostaTalentoDTO> talentosSelecionados = new();
+    private List<TalentoDTO> talentosFiltrados = new();
+    private string? validacaoMensagemTalento;
+    
+    private void FiltrarTalentosPorHabilidades()
+    {
+        var idsHabilidadesSelecionadas = habilidadesRequeridas.Select(h => h.HabilidadeId).ToHashSet();
+
+        talentosFiltrados = todosTalentos
+            .Where(t => t.Habilidades.Any(th => idsHabilidadesSelecionadas.Contains(th.HabilidadeId)))
+            .ToList();
+
+        StateHasChanged();  // atualiza UI se necessário
+    }
+
+    private async Task RemoverTalento(int talentoId)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", "Tem certeza que deseja remover este talento da proposta?"))
+            return;
+
+        var response = await PropostaTalentoService.RemoveTalentoFromPropostaAsync(PropostaId, talentoId);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadTalentos();
+            ExibirMensagemSucesso("Talento removido com sucesso!");
+        }
+        else
+        {
+            var errorMsg = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Erro ao remover talento: {errorMsg}");
+        }
+    }
+
+    private async Task HandleTalentoSubmit()
+    {
+        if (novoTalento.TalentoId == 0)
+        {
+            validacaoMensagemTalento = "Deve selecionar um talento.";
+            return;
+        }
+
+        validacaoMensagemTalento = null;
+        novoTalento.PropostaId = PropostaId;
+
+        var response = await PropostaTalentoService.AddTalentoToPropostaAsync(novoTalento);
+
+        if (response.IsSuccessStatusCode)
+        {
+            mostrarFormularioTalento = false;
+            novoTalento = new AddPropostaTalentoDTO(); // limpar para próximo
+            await LoadTalentos();
+            ExibirMensagemSucesso("Talento adicionado com sucesso!");
+        }
+        else
+        {
+            validacaoMensagemTalento = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    private async Task LoadTalentos()
+    {
+        talentosSelecionados = await PropostaTalentoService.GetTalentosByPropostaIdAsync(PropostaId) ?? new();
+        todosTalentos = await TalentoService.GetAllTalentosAsync();
+        FiltrarTalentosPorHabilidades();
     }
 
     private void ExibirMensagemSucesso(string mensagem)

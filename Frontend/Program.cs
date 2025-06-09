@@ -57,6 +57,10 @@ builder.Services.AddHttpClient<PropostaTrabalhoService>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7070/");
 });
+builder.Services.AddHttpClient<PropostaTalentoService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7070/");
+});
 builder.Services.AddHttpClient<EstadoService>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:7070/");
