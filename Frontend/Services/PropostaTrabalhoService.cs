@@ -1,5 +1,6 @@
 using Frontend.DTOClasses;
 using System.Net.Http.Json;
+using Frontend.DtoClasses;
 
 namespace Frontend.Services
 {
@@ -37,5 +38,10 @@ namespace Frontend.Services
         {
             return await _httpClient.DeleteAsync($"{baseUrl}/{id}");
         }
+        
+        public async Task<List<TalentosElegiveisDTO>?> GetTalentosElegiveisAsync(int propostaId)
+            => await _httpClient.GetFromJsonAsync<List<TalentosElegiveisDTO>>(
+                $"{baseUrl}/{propostaId}/talentos-elegiveis"
+            );
     }
 }

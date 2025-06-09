@@ -15,9 +15,9 @@ public partial class Talento
 
     public string Email { get; set; } = null!;
 
-    public decimal? PrecoHora { get; set; }
+    public decimal PrecoHora { get; set; }
 
-    public bool? Visibilidade { get; set; }
+    public bool Visibilidade { get; set; }
 
     public virtual ICollection<Experiencia> Experiencia { get; set; } = new List<Experiencia>();
 

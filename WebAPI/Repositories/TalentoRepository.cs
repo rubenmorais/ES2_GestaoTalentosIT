@@ -30,8 +30,8 @@ namespace WebAPI.Repositories
                     Nome = t.Nome,
                     Pais = t.Pais,
                     Email = t.Email,
-                    PrecoPorHora = t.PrecoHora ?? 0,
-                    Visibilidade = t.Visibilidade ?? false,
+                    PrecoPorHora = t.PrecoHora,
+                    Visibilidade = t.Visibilidade,
                     Habilidades = t.TalentosHabilidades.Select(th => new TalentoHabilidadeDTO
                     {
                         TalentoId = th.Talentoid,
@@ -43,7 +43,7 @@ namespace WebAPI.Repositories
                 .ToList();
         }
 
-        public TalentoDTO GetById(int id)
+        public TalentoDTO? GetById(int id)
         {
             return _context.Talentos
                 .Include(t => t.TalentosHabilidades)
@@ -56,8 +56,8 @@ namespace WebAPI.Repositories
                     Nome = t.Nome,
                     Pais = t.Pais,
                     Email = t.Email,
-                    PrecoPorHora = t.PrecoHora ?? 0,
-                    Visibilidade = t.Visibilidade ?? false,
+                    PrecoPorHora = t.PrecoHora,
+                    Visibilidade = t.Visibilidade,
                     Habilidades = t.TalentosHabilidades.Select(th => new TalentoHabilidadeDTO
                     {
                         TalentoId = th.Talentoid,
@@ -135,8 +135,8 @@ namespace WebAPI.Repositories
                 Nome = talento.Nome,
                 Pais = talento.Pais,
                 Email = talento.Email,
-                PrecoPorHora = talento.PrecoHora ?? 0,
-                Visibilidade = talento.Visibilidade ?? false,
+                PrecoPorHora = talento.PrecoHora,
+                Visibilidade = talento.Visibilidade,
                 Habilidades = talento.TalentosHabilidades.Select(th => new TalentoHabilidadeDTO
                 {
                     TalentoId = th.Talentoid,

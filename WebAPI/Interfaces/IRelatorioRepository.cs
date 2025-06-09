@@ -5,6 +5,9 @@ namespace WebAPI.Interfaces
 {
     public interface IRelatorioRepository
     {
-        List<RelatorioPrecoMedioDTO> GetRelatorioPrecoMedio();
+        List<RelatorioPrecoMedioDTO> GetRelatorioPrecoMedio(
+            decimal? minPrecoHora = null,
+            decimal? maxPrecoHora = null
+            );
     }
 } 

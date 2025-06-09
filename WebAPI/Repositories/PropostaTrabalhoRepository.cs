@@ -153,5 +153,11 @@ namespace WebAPI.Repositories
             _context.PropostasTrabalhos.Remove(proposta);
             _context.SaveChanges();
         }
+
+        public IQueryable<PropostasTrabalho> PropostasTrabalhos 
+            => _context.PropostasTrabalhos;
+        
+        public IQueryable<Talento> Talentos 
+            => _context.Talentos;
     }
 }

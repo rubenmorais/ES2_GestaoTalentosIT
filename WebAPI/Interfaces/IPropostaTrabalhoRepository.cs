@@ -10,5 +10,7 @@ namespace WebAPI.Interfaces
         PropostasTrabalho Create(CreatePropostaTrabalhoDTO dto);
         PropostaTrabalhoDTO Update(int id, UpdatePropostaTrabalhoDTO dto);
         void Delete(int id);
+        IQueryable<PropostasTrabalho> PropostasTrabalhos { get; }
+        IQueryable<Talento>        Talentos          { get; }
     }
 }

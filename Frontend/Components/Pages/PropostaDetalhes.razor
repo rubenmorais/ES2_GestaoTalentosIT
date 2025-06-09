@@ -162,6 +162,43 @@ else
         }
     }
 
+    <h4 class="mt-5">Talentos Elegíveis</h4>
+
+    @if (carregandoTalentos)
+    {
+        <p>Carregando talentos elegíveis…</p>
+    }
+    else if (talentosElegiveis == null || !talentosElegiveis.Any())
+    {
+        <p class="text-muted">Nenhum talento atende a todos os requisitos.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Preço / Hora</th>
+                <th>Horas</th>
+                <th>Valor Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var t in talentosElegiveis)
+            {
+                <tr>
+                    <td>@t.Nome</td>
+                    <td>@t.Email</td>
+                    <td>@t.PrecoHora.ToString("C")</td>
+                    <td>@t.TotalHoras</td>
+                    <td>@t.TotalValue.ToString("C")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    
     @if (mostrarFormularioHabilidade)
     {
         <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" aria-labelledby="habilidadeModalTitle" aria-hidden="true">
@@ -265,6 +302,8 @@ else
     private List<HabilidadeDTO> todasHabilidades = new();
     private List<TalentoDTO> todosTalentos = new();
     private List<ClienteDTO>? clientes;
+    private List<TalentosElegiveisDTO>? talentosElegiveis;
+    private bool carregandoTalentos = true;
     private string? validacaoMensagemHabilidade;
     private bool isAdmin = false;
     private int? UtilizadorIdLogado;
@@ -284,6 +323,8 @@ else
         todosTalentos = await TalentoService.GetAllTalentosAsync();
         clientes = await ClienteService.GetAllClientesAsync();
         estadosDisponiveis = await EstadoService.GetAllEstadosAsync() ?? new List<EstadoDTO>();
+        talentosElegiveis = await PropostaService.GetTalentosElegiveisAsync(PropostaId);
+        carregandoTalentos = false;
 
         if (proposta != null)
             estadoSelecionado = estadosDisponiveis.FirstOrDefault(e => e.Nome == proposta.NomeEstado)?.EstadoId ?? 1;

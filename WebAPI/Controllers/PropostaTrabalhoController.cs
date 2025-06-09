@@ -95,6 +95,25 @@ namespace WebAPI.Controllers
             }
         }
         
+        [HttpGet("{id}/talentos-elegiveis")]
+        public ActionResult<List<TalentosElegiveisDTO>> GetTalentosElegiveis(int id)
+        {
+            try
+            {
+                var lista = _propostaService.GetTalentosElegiveis(id)
+                            ?? new List<TalentosElegiveisDTO>();
+                return Ok(lista);
+            }
+            catch (KeyNotFoundException knf)
+            {
+                return NotFound(knf.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Erro ao recuperar talentos elegíveis: {ex.Message}");
+            }
+        }
+        
         
     }
 }

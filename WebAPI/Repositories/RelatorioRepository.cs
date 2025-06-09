@@ -19,29 +19,44 @@ namespace WebAPI.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public List<RelatorioPrecoMedioDTO> GetRelatorioPrecoMedio()
+        public List<RelatorioPrecoMedioDTO> GetRelatorioPrecoMedio(
+            decimal? minPrecoHora = null,
+            decimal? maxPrecoHora = null
+        )
         {
-            return _context.Talentos
+            var query = _context.Talentos
                 .Include(t => t.TalentosHabilidades)
                     .ThenInclude(th => th.Habilidade)
                         .ThenInclude(h => h.Categoria)
-                .Where(t => t.PrecoHora.HasValue)
-                .GroupBy(t => new { 
+                .AsQueryable();
+
+            if (minPrecoHora.HasValue)
+                query = query.Where(t => t.PrecoHora >= minPrecoHora.Value);
+
+            if (maxPrecoHora.HasValue)
+                query = query.Where(t => t.PrecoHora <= maxPrecoHora.Value);
+
+            var resultado = query
+                .GroupBy(t => new 
+                {
                     Categoria = t.TalentosHabilidades
                         .Select(th => th.Habilidade.Categoria.Categoria)
-                        .FirstOrDefault() ?? "Sem Categoria",
-                    t.Pais 
+                        .FirstOrDefault() 
+                        ?? "Sem Categoria",
+                    t.Pais
                 })
                 .Select(g => new RelatorioPrecoMedioDTO
                 {
-                    Categoria = g.Key.Categoria,
-                    Pais = g.Key.Pais,
-                    PrecoMedioMensal = g.Average(t => t.PrecoHora.Value * HORAS_POR_MES),
+                    Categoria          = g.Key.Categoria,
+                    Pais               = g.Key.Pais,
+                    PrecoMedioMensal   = g.Average(t => t.PrecoHora * HORAS_POR_MES),
                     QuantidadeTalentos = g.Count()
                 })
                 .OrderBy(r => r.Categoria)
                 .ThenBy(r => r.Pais)
                 .ToList();
+
+            return resultado;
         }
     }
-} 
+}
