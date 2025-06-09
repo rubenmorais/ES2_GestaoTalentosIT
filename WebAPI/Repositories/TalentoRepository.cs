@@ -103,6 +103,7 @@ namespace WebAPI.Repositories
         {
             var talento = _context.Talentos
                 .Include(t => t.TalentosHabilidades)
+                .ThenInclude(th => th.Habilidade)
                 .FirstOrDefault(t => t.Talentoid == id);
                 
             if (talento == null)
